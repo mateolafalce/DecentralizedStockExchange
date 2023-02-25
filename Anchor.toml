@@ -1,0 +1,14 @@
+[features]
+seeds = false
+skip-lint = false
+[programs.devnet]
+decentralized_exchange = "AZ2FJemdNTrpz3dyi4A5H5JxyrSg9oEjunki8vpc5xt6"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "devnet"
+wallet = "/home/mateo/.config/solana/id.json"
+
+[scripts]
