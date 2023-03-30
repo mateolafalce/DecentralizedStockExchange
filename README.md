@@ -11,9 +11,7 @@
 
 This exchange is based on the Solana blockchain technology, which makes it completely decentralized and highly secure. Thanks to privacy and decentralization, this stock market allows users to carry out financial transactions completely privately and freely, without the need for intermediaries.
 
-By using web3, the technology that enables interaction with the blockchain, users can enjoy a more secure experience free from manipulation by third parties. This means that users have greater control over their financial assets and can make more informed decisions without worrying about third-party interference.
-
-Furthermore, thanks to the decentralized nature of the Solana blockchain, the stock market is resistant to censorship and manipulation, making it a completely fair and transparent free market system.
+By using web3, the technology that enables interaction with the blockchain, users can enjoy a more secure experience free from manipulation by third parties. This means that users have greater control over their financial assets and can make more informed decisions without worrying about third-party interference. Furthermore, thanks to the decentralized nature of the Solana blockchain, the stock market is resistant to censorship and manipulation, making it a completely fair and transparent free market system.
 
 I am excited to introduce this project and hope you find it useful and exciting.
 
