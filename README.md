@@ -2,8 +2,21 @@
 
   ![stock-exchange](stock-exchange.gif)
 
-  <h1>Decentralized stock exchange</h1>
-  A digital stock exchange focused on web3
+  ## Decentralized stock exchange
+
+
+
+---
+
+![GitHub Repo stars](https://img.shields.io/github/stars/mateolafalce/DecentralizedStockExchange?color=193737&style=for-the-badge)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/mateolafalce/DecentralizedStockExchange?color=193737&style=for-the-badge)
+![GitHub forks](https://img.shields.io/github/forks/mateolafalce/DecentralizedStockExchange?color=193737&style=for-the-badge)
+
+![GitHub](https://img.shields.io/github/license/mateolafalce/DecentralizedStockExchange?color=193737&style=for-the-badge)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/mateolafalce/DecentralizedStockExchange?color=193737&style=for-the-badge)
+
+![GitHub closed pull requests](https://img.shields.io/github/issues-pr-closed-raw/mateolafalce/DecentralizedStockExchange?color=193737&style=for-the-badge)
+![GitHub closed issues](https://img.shields.io/github/issues-closed/mateolafalce/DecentralizedStockExchange?color=193737&style=for-the-badge)
 
 </div>
 
@@ -13,13 +26,13 @@ This exchange is based on the Solana blockchain technology, which makes it compl
 
 By using web3, the technology that enables interaction with the blockchain, users can enjoy a more secure experience free from manipulation by third parties. This means that users have greater control over their financial assets and can make more informed decisions without worrying about third-party interference. Furthermore, thanks to the decentralized nature of the Solana blockchain, the stock market is resistant to censorship and manipulation, making it a completely fair and transparent free market system.
 
-I am excited to introduce this project and hope you find it useful and exciting.
-
 Next I am going to comment you about the functionalities of the program:
 
 ---
 
-<h3 align="center">Initialize the market account</h3>
+<details>
+
+<summary>Initialize the market account 🐻</summary>
 
 ```rust
 pub fn initialize_decentralized_exchange_system(
@@ -55,6 +68,10 @@ The #[derive(Accounts)] macro defines the requirements for the accounts that are
 - A SystemExchangeAccount to be initialized.
 - A user account that will pay for the initialization of the decentralized exchange system account.
 - A system program account that will be used to transact on the blockchain.
+
+</details>
+
+---
 
 <h3 align="center">Create the stock account</h3>
 
