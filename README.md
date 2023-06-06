@@ -232,7 +232,11 @@ Finally, the necessary information is established in the offer to buy account, i
 
 ---
 
-<h3 align="center">Create a seller account 💰</h3>
+<details>
+
+<summary>Create a seller account 💰</summary>
+
+<br>
 
 ```rust
 pub fn init_sell_account(
@@ -271,6 +275,10 @@ The init_sell_account function is responsible for initializing a sale account on
 The function uses the share and user account information to calculate a unique public account address (_sell_pda) for the sell account being initialized. This address is used to ensure that only the user account corresponding to the sale can perform operations on the sale account.
 
 The function then does some validation to make sure that the share accounts and the user account are valid. If these validations are successful, the function initializes the sales account with the information provided. In particular, the function sets the sale price and the number of shares available for sale, as well as the public address of the user account that is making the sale.
+
+</details>
+
+---
 
 <h3 align="center">Create an IPO</h3>
 
