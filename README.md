@@ -132,7 +132,9 @@ The function returns a result indicating whether the operation was successful or
 
 ---
 
-<h3 align="center">Create a holder account</h3>
+<details>
+
+<summary>Create a holder account 📦</summary>
 
 ```rust
 pub fn init_holder_account(
@@ -174,6 +176,10 @@ The init_holder_account function is a public (pub) function that is used to init
 The function checks if the PDA account public key of the stock account matches the provided stock account public key, and if not, returns an ErrorCode. If the public keys match, a unique Program Derived Address (PDA) key is generated for the holder account using the public keys of the stock account and the "from" account.
 
 The function then updates various accounts, including the decentralized exchange system account, the holder account, and the stock account. The number of holders and the participation account are increased in the holder account, and the total number of holders is increased in the decentralized exchange system account.
+
+</details>
+
+---
 
 <h3 align="center">Create a buyer account</h3>
 
