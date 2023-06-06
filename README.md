@@ -136,6 +136,8 @@ The function returns a result indicating whether the operation was successful or
 
 <summary>Create a holder account 📦</summary>
 
+<br>
+
 ```rust
 pub fn init_holder_account(
         ctx: Context<InitHolderAccount>
@@ -181,7 +183,11 @@ The function then updates various accounts, including the decentralized exchange
 
 ---
 
-<h3 align="center">Create a buyer account</h3>
+<details>
+
+<summary>Create a buyer account 📦</summary>
+
+<br>
 
 ```rust
 pub fn init_buy_account(
@@ -222,7 +228,11 @@ The buy_offer account is then initialized using the Accounts macro. It is specif
 
 Finally, the necessary information is established in the offer to buy account, including the size of the account (len), the public address (pubkey) of the sender and the number of shares to buy and their price (sell_or_buy_amount and price, respectively). ). The function returns an Ok(()) result to indicate that the operation was successful.
 
-<h3 align="center">Create a seller account</h3>
+</details>
+
+---
+
+<h3 align="center">Create a seller account 💰</h3>
 
 ```rust
 pub fn init_sell_account(
