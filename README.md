@@ -4,8 +4,6 @@
 
   ## Decentralized stock exchange
 
-
-
 ---
 
 ![GitHub Repo stars](https://img.shields.io/github/stars/mateolafalce/DecentralizedStockExchange?color=193737&style=for-the-badge)
@@ -33,6 +31,8 @@ Next I am going to comment you about the functionalities of the program:
 <details>
 
 <summary>Initialize the market account 🐻</summary>
+
+<br>
 
 ```rust
 pub fn initialize_decentralized_exchange_system(
@@ -73,7 +73,9 @@ The #[derive(Accounts)] macro defines the requirements for the accounts that are
 
 ---
 
-<h3 align="center">Create the stock account</h3>
+<details>
+
+<summary>Create the stock account 📈</summary>
 
 ```rust
 pub fn create_stock(
@@ -126,6 +128,9 @@ The function then creates a new stock stock account using the "StockAccount" dat
 
 The function returns a result indicating whether the operation was successful or not.
 
+</details>
+
+---
 
 <h3 align="center">Create a holder account</h3>
 
