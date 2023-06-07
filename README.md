@@ -487,7 +487,11 @@ The accounts for the decentralized systems and the assets involved in the offer 
 
 ---
 
-<h3 align="center">Accept a sell offer</h3>
+<details>
+
+<summary>Accept a sell offer 👍</summary>
+
+<br>
 
 ```rust
 pub fn accept_a_sell(
@@ -569,6 +573,9 @@ If the sell offer is valid, the function invokes the system_instruction::transfe
 - system_program: The system program account used to invoke the system_instruction::transfer() function.
 This function is defined as a Rust public function with the signature pub fn accept_a_sell(ctx: Context<AcceptASell>, price: u64) -> Result<()>. It returns a Result<()> indicating the success or failure of the transaction.
 
+</details>
+
+---
 <h3 align="center">Accept a buy offer</h3>
 
 ```rust
