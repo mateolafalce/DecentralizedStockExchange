@@ -77,6 +77,8 @@ The #[derive(Accounts)] macro defines the requirements for the accounts that are
 
 <summary>Create the stock account 📈</summary>
 
+<br>
+
 ```rust
 pub fn create_stock(
         ctx: Context<CreateStock>,
@@ -185,7 +187,7 @@ The function then updates various accounts, including the decentralized exchange
 
 <details>
 
-<summary>Create a buyer account 📦</summary>
+<summary>Create a buyer account 🛒</summary>
 
 <br>
 
@@ -280,7 +282,11 @@ The function then does some validation to make sure that the share accounts and 
 
 ---
 
-<h3 align="center">Create an IPO</h3>
+<details>
+
+<summary>Create an IPO 🎉</summary>
+
+<br>
 
 ```rust
 pub fn buy_in_initial_public_offering(
