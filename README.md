@@ -334,7 +334,15 @@ The function takes as input a context and an amount, and returns a result. The c
 
 If these conditions are met, the function performs the transfer of tokens from the buyer's account to the holder's account and updates the information of the holder's account, the stock token account, and the decentralized exchange system account.
 
-<h3 align="center">Make a sell offer</h3>
+</details>
+
+---
+
+<details>
+
+<summary>Make a sell offer ✨</summary>
+
+<br>
 
 ```rust
 pub fn sell_offer(
