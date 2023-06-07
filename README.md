@@ -411,8 +411,15 @@ The function then checks for the uniqueness of the price in the sell offer by ca
 
 The function then updates the relevant accounts by incrementing their relevant counters and appending the sell amount and price to the sell offer account. Finally, the function returns an Ok(()) result.
 
+</details>
 
-<h3 align="center">Make a buy offer</h3>
+---
+
+<details>
+
+<summary>Make a buy offer 💎</summary>
+
+<br>
 
 ```rust
 pub fn buy_offer(
@@ -475,6 +482,10 @@ pub struct BuyOffer<'info> {
 The function takes as input a ctx context structure, the amount of assets to buy buy_amount and the bid price price. First, the function verifies the authenticity of the offer holder's account and the validity of the quantity and parameters of the asset account and the offer to buy. It then invokes the transfer function of the Solana system program to transfer the necessary funds from the buyer's account to the purchase offer account.
 
 The accounts for the decentralized systems and the assets involved in the offer are then updated, and the offer details are added to the offer to buy account. Finally, a result is returned indicating the success or failure of the transaction. The BuyOffer framework defines the account requirements and the account information needed to complete the transaction.
+
+</details>
+
+---
 
 <h3 align="center">Accept a sell offer</h3>
 
