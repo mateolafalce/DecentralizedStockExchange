@@ -576,7 +576,12 @@ This function is defined as a Rust public function with the signature pub fn acc
 </details>
 
 ---
-<h3 align="center">Accept a buy offer</h3>
+
+<details>
+
+<summary>Accept a buy offer 🛒</summary>
+
+<br>
 
 ```rust
 pub fn accept_a_buy(
@@ -640,6 +645,10 @@ pub struct AcceptABuy<'info> {
 The function accepts two arguments: "ctx" and "price". "ctx" is a context containing all accounts relevant to the transaction, while "price" is the price of the bid.
 
 The function first performs some checks to make sure that the transaction is valid and secure. Then, update the details of the accounts involved in the transaction. In particular, it reduces the account balance of the purchase offer in "price" units and increases the account balance of the seller in "price" units. Then, update the counters and tracking data for the decentralized exchange.
+
+</details>
+
+---
 
 <h3 align="center">Cancel a sell offer</h3>
 
