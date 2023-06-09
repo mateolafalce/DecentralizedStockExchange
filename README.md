@@ -719,7 +719,11 @@ The function then looks up the sales quote in the sales account and removes the 
 
 ---
 
-<h3 align="center">Cancel a buy offer</h3>
+<details>
+
+<summary>Cancel a buy offer ❌</summary>
+
+<br>
 
 ```rust
 pub fn cancel_buy(
@@ -786,3 +790,7 @@ This function requires access to several accounts, which are specified in the Ca
 - buy_pda: The PDA for the buy offer. This account is not dangerous.
 - from: The account that will receive the returned lamports.
 - system_program: The system program account for Solana.
+
+</details>
+
+---
