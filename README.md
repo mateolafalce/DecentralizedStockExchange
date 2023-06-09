@@ -650,7 +650,11 @@ The function first performs some checks to make sure that the transaction is val
 
 ---
 
-<h3 align="center">Cancel a sell offer</h3>
+<details>
+
+<summary>Cancel a sell offer ❌</summary>
+
+<br>
 
 ```rust
 pub fn cancel_sell(
@@ -710,6 +714,10 @@ The function is responsible for canceling an existing sale offer in the exchange
 The function first looks up the public address of the put holder's account and checks if it matches the public address stored in the exchange system. It also verifies that the public address of the account holder of the offer to sell is the same as the public address of the holder of the selling account being cancelled.
 
 The function then looks up the sales quote in the sales account and removes the sales quote corresponding to the cancellation price. The corresponding accounts are then updated to reflect the cancellation of the offer, including the reduction of the total number of offers in the system and the number of sales offers in the stock account. Finally, control is returned to the user and a result is returned indicating whether the cancellation was successful.
+
+</details>
+
+---
 
 <h3 align="center">Cancel a buy offer</h3>
 
