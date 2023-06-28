@@ -24,15 +24,9 @@ This exchange is based on the Solana blockchain technology, which makes it compl
 
 By using web3, the technology that enables interaction with the blockchain, users can enjoy a more secure experience free from manipulation by third parties. This means that users have greater control over their financial assets and can make more informed decisions without worrying about third-party interference. Furthermore, thanks to the decentralized nature of the Solana blockchain, the stock market is resistant to censorship and manipulation, making it a completely fair and transparent free market system.
 
-Next I am going to comment you about the functionalities of the program:
-
 ---
 
-<details>
-
-<summary>Initialize the market account 🐻</summary>
-
-<br>
+## Initialize the market account 🐻
 
 ```rust
 pub fn initialize_decentralized_exchange_system(
@@ -69,15 +63,9 @@ The #[derive(Accounts)] macro defines the requirements for the accounts that are
 - A user account that will pay for the initialization of the decentralized exchange system account.
 - A system program account that will be used to transact on the blockchain.
 
-</details>
-
 ---
 
-<details>
-
-<summary>Create the stock account 📈</summary>
-
-<br>
+## Create the stock account 📈
 
 ```rust
 pub fn create_stock(
@@ -130,15 +118,9 @@ The function then creates a new stock stock account using the "StockAccount" dat
 
 The function returns a result indicating whether the operation was successful or not.
 
-</details>
-
 ---
 
-<details>
-
-<summary>Create a holder account 📦</summary>
-
-<br>
+## Create a holder account 📦
 
 ```rust
 pub fn init_holder_account(
@@ -181,15 +163,9 @@ The function checks if the PDA account public key of the stock account matches t
 
 The function then updates various accounts, including the decentralized exchange system account, the holder account, and the stock account. The number of holders and the participation account are increased in the holder account, and the total number of holders is increased in the decentralized exchange system account.
 
-</details>
-
 ---
 
-<details>
-
-<summary>Create a buyer account 🛒</summary>
-
-<br>
+## Create a buyer account 🛒
 
 ```rust
 pub fn init_buy_account(
@@ -230,15 +206,9 @@ The buy_offer account is then initialized using the Accounts macro. It is specif
 
 Finally, the necessary information is established in the offer to buy account, including the size of the account (len), the public address (pubkey) of the sender and the number of shares to buy and their price (sell_or_buy_amount and price, respectively). ). The function returns an Ok(()) result to indicate that the operation was successful.
 
-</details>
-
 ---
 
-<details>
-
-<summary>Create a seller account 💰</summary>
-
-<br>
+## Create a seller account 💰
 
 ```rust
 pub fn init_sell_account(
@@ -278,15 +248,9 @@ The function uses the share and user account information to calculate a unique p
 
 The function then does some validation to make sure that the share accounts and the user account are valid. If these validations are successful, the function initializes the sales account with the information provided. In particular, the function sets the sale price and the number of shares available for sale, as well as the public address of the user account that is making the sale.
 
-</details>
-
 ---
 
-<details>
-
-<summary>Create an IPO 🎉</summary>
-
-<br>
+## Create an IPO 🎉
 
 ```rust
 pub fn buy_in_initial_public_offering(
@@ -334,15 +298,9 @@ The function takes as input a context and an amount, and returns a result. The c
 
 If these conditions are met, the function performs the transfer of tokens from the buyer's account to the holder's account and updates the information of the holder's account, the stock token account, and the decentralized exchange system account.
 
-</details>
-
 ---
 
-<details>
-
-<summary>Make a sell offer ✨</summary>
-
-<br>
+## Make a sell offer ✨
 
 ```rust
 pub fn sell_offer(
@@ -411,15 +369,9 @@ The function then checks for the uniqueness of the price in the sell offer by ca
 
 The function then updates the relevant accounts by incrementing their relevant counters and appending the sell amount and price to the sell offer account. Finally, the function returns an Ok(()) result.
 
-</details>
-
 ---
 
-<details>
-
-<summary>Make a buy offer 💎</summary>
-
-<br>
+## Make a buy offer 💎
 
 ```rust
 pub fn buy_offer(
@@ -483,15 +435,9 @@ The function takes as input a ctx context structure, the amount of assets to buy
 
 The accounts for the decentralized systems and the assets involved in the offer are then updated, and the offer details are added to the offer to buy account. Finally, a result is returned indicating the success or failure of the transaction. The BuyOffer framework defines the account requirements and the account information needed to complete the transaction.
 
-</details>
-
 ---
 
-<details>
-
-<summary>Accept a sell offer 👍</summary>
-
-<br>
+## Accept a sell offer 👍
 
 ```rust
 pub fn accept_a_sell(
@@ -553,6 +499,7 @@ pub struct AcceptASell<'info> {
     pub system_program: Program<'info, System>
 }
 ```
+
 Its purpose is to accept a sell offer from a holder account and execute the transaction by transferring the tokens to the buyer and updating the relevant accounts.The function takes in the following parameters:
 
 - ctx: An anchor context that provides access to the accounts used in the function.
@@ -573,15 +520,9 @@ If the sell offer is valid, the function invokes the system_instruction::transfe
 - system_program: The system program account used to invoke the system_instruction::transfer() function.
 This function is defined as a Rust public function with the signature pub fn accept_a_sell(ctx: Context<AcceptASell>, price: u64) -> Result<()>. It returns a Result<()> indicating the success or failure of the transaction.
 
-</details>
-
 ---
 
-<details>
-
-<summary>Accept a buy offer 🛒</summary>
-
-<br>
+## Accept a buy offer 🛒
 
 ```rust
 pub fn accept_a_buy(
@@ -646,15 +587,9 @@ The function accepts two arguments: "ctx" and "price". "ctx" is a context contai
 
 The function first performs some checks to make sure that the transaction is valid and secure. Then, update the details of the accounts involved in the transaction. In particular, it reduces the account balance of the purchase offer in "price" units and increases the account balance of the seller in "price" units. Then, update the counters and tracking data for the decentralized exchange.
 
-</details>
-
 ---
 
-<details>
-
-<summary>Cancel a sell offer ❌</summary>
-
-<br>
+## Cancel a sell offer ❌
 
 ```rust
 pub fn cancel_sell(
@@ -715,15 +650,9 @@ The function first looks up the public address of the put holder's account and c
 
 The function then looks up the sales quote in the sales account and removes the sales quote corresponding to the cancellation price. The corresponding accounts are then updated to reflect the cancellation of the offer, including the reduction of the total number of offers in the system and the number of sales offers in the stock account. Finally, control is returned to the user and a result is returned indicating whether the cancellation was successful.
 
-</details>
-
 ---
 
-<details>
-
-<summary>Cancel a buy offer ❌</summary>
-
-<br>
+## Cancel a buy offer ❌
 
 ```rust
 pub fn cancel_buy(
@@ -790,7 +719,3 @@ This function requires access to several accounts, which are specified in the Ca
 - buy_pda: The PDA for the buy offer. This account is not dangerous.
 - from: The account that will receive the returned lamports.
 - system_program: The system program account for Solana.
-
-</details>
-
----
