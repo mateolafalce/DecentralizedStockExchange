@@ -8,31 +8,48 @@ use crate::state::accounts::*;
 use crate::errors::ErrorCode;
 
 pub fn buy_offer(
-        ctx: Context<BuyOffer>,
-        buy_amount: u64,
-        price: u64
-    ) -> Result<()> {
-        let (holder_pda, _bump) = Pubkey::find_program_address(&[ctx.accounts.stock_account.key().as_ref(), ctx.accounts.from.key().as_ref()], ctx.program_id);
-        require!(holder_pda.key() == ctx.accounts.holder_account.key(), ErrorCode::HolderError);
-        require!(buy_amount > 0, ErrorCode::AmountError);
-        require!(ctx.accounts.stock_account_pda.key() == ctx.accounts.stock_account.key(), ErrorCode::PubkeyError);
-        require!(buy_amount <= ctx.accounts.stock_account.total_supply, ErrorCode::AmountError);
-        require!(ctx.accounts.buy_offer.key() == ctx.accounts.buy_pda.key(), ErrorCode::PubkeyError);
-        anchor_lang::solana_program::program::invoke(
-            &system_instruction::transfer(&ctx.accounts.from.key(), &ctx.accounts.buy_offer.key(), price),
-            &[ctx.accounts.from.to_account_info(), ctx.accounts.buy_pda.to_account_info().clone()],
-        ).expect("Error");
-        let system: &mut Account<SystemExchangeAccount> = &mut ctx.accounts.decentralized_exchange_system; 
-        let stock_account: &mut Account<StockAccount> = &mut ctx.accounts.stock_account;
-        let holder_account: &mut Account<HolderAccount> = &mut ctx.accounts.holder_account;
-        let buy_offer: &mut Account<SellOrBuyAccount> = &mut ctx.accounts.buy_offer; 
-        buy_offer.sell_or_buy_amount.push(buy_amount);
-        buy_offer.price.push(price);
-        buy_offer.len += 16;
-        system.total_offers += 1;
-        stock_account.current_offers += 1;
-        Ok(())
-    }
+    ctx: Context<BuyOffer>,
+    buy_amount: u64,
+    price: u64
+) -> Result<()> {
+    let (holder_pda, _bump) = Pubkey::find_program_address(
+        &[
+            ctx.accounts.stock_account.key().as_ref(),
+            ctx.accounts.from.key().as_ref()
+        ],
+        ctx.program_id
+    );
+    // Check if the holder account is correct
+    require!(holder_pda.key() == ctx.accounts.holder_account.key(), ErrorCode::HolderError);
+    // Check if buy_amount is greater than 0
+    require!(buy_amount > 0, ErrorCode::AmountError);
+    // Check if stock_account_pda key matches stock_account key
+    require!(ctx.accounts.stock_account_pda.key() == ctx.accounts.stock_account.key(), ErrorCode::PubkeyError);
+    // Check if buy_amount is less than or equal to stock_account total_supply
+    require!(buy_amount <= ctx.accounts.stock_account.total_supply, ErrorCode::AmountError);
+    // Check if buy_offer key matches buy_pda key
+    require!(ctx.accounts.buy_offer.key() == ctx.accounts.buy_pda.key(), ErrorCode::PubkeyError);
+    // Transfer SOL from 'from' account to 'buy_offer' account using system program
+    anchor_lang::solana_program::program::invoke(
+        &system_instruction::transfer(&ctx.accounts.from.key(), &ctx.accounts.buy_offer.key(), price),
+        &[ctx.accounts.from.to_account_info(), ctx.accounts.buy_pda.to_account_info().clone()],
+    ).expect("Error");
+    // Get mutable references to the accounts
+    let system: &mut Account<SystemExchangeAccount> = &mut ctx.accounts.decentralized_exchange_system;
+    let stock_account: &mut Account<StockAccount> = &mut ctx.accounts.stock_account;
+    let holder_account: &mut Account<HolderAccount> = &mut ctx.accounts.holder_account;
+    let buy_offer: &mut Account<SellOrBuyAccount> = &mut ctx.accounts.buy_offer;
+    // Add buy_amount and price to sell_or_buy_amount and price arrays
+    buy_offer.sell_or_buy_amount.push(buy_amount);
+    buy_offer.price.push(price);
+    // Increase the length by 16 (assuming u64 takes 8 bytes)
+    buy_offer.len += 16;
+    // Update total_offers in the system
+    system.total_offers += 1;
+    // Update current_offers in the stock_account
+    stock_account.current_offers += 1;
+    Ok(())
+}
 
 #[derive(Accounts)]
 pub struct BuyOffer<'info> {
