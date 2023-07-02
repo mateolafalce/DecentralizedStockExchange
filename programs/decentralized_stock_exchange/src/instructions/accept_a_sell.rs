@@ -3,37 +3,50 @@ use anchor_lang::{
     solana_program::account_info::AccountInfo,
     solana_program::system_instruction,
     solana_program::pubkey::Pubkey,
-}; 
+};
 use crate::state::accounts::*;
 use crate::errors::ErrorCode;
 
 pub fn accept_a_sell(
-        ctx: Context<AcceptASell>,
-        price: u64
-    ) -> Result<()> {
-        require!(ctx.accounts.stock_account_pda.key() == ctx.accounts.stock_account.key(), ErrorCode::PubkeyError);
-        require!(ctx.accounts.sell_offer.key() == ctx.accounts.sell_pda.key(), ErrorCode::PubkeyError);
-        let index = ctx.accounts.sell_offer.price.iter().position(|&price| price == price).unwrap();
-        require!(price == ctx.accounts.sell_offer.price[index], ErrorCode::PriceError);
-        anchor_lang::solana_program::program::invoke(
-            &system_instruction::transfer(&ctx.accounts.from.key(), &ctx.accounts.sell_offer.key(), ctx.accounts.sell_offer.price[index]),
-            &[ctx.accounts.from.to_account_info(), ctx.accounts.sell_pda.to_account_info().clone()],
-        ).expect("Error");
-        let system: &mut Account<SystemExchangeAccount> = &mut ctx.accounts.decentralized_exchange_system; 
-        let stock_account: &mut Account<StockAccount> = &mut ctx.accounts.stock_account;
-        let seller_account: &mut Account<HolderAccount> = &mut ctx.accounts.seller_account;
-        let buyer_account: &mut Account<HolderAccount> = &mut ctx.accounts.buyer_account;
-        let sell_offer: &mut Account<SellOrBuyAccount> = &mut ctx.accounts.sell_offer; 
-        system.historical_exchanges += 1;
-        system.total_offers -= 1;
-        stock_account.current_offers -= 1;
-        seller_account.participation -= sell_offer.sell_or_buy_amount[index];
-        buyer_account.participation += sell_offer.sell_or_buy_amount[index];
-        sell_offer.sell_or_buy_amount.remove(index);
-        sell_offer.price.remove(index);
-        sell_offer.len -= 16;
-        Ok(())
-    }
+    ctx: Context<AcceptASell>,
+    price: u64
+) -> Result<()> {
+    // Check if the stock account PDA key matches the provided stock account key
+    require!(ctx.accounts.stock_account_pda.key() == ctx.accounts.stock_account.key(), ErrorCode::PubkeyError);
+    // Check if the sell offer key matches the provided sell PDA key
+    require!(ctx.accounts.sell_offer.key() == ctx.accounts.sell_pda.key(), ErrorCode::PubkeyError);
+    // Find the index of the specified price in the sell offer prices array
+    let index = ctx.accounts.sell_offer.price.iter().position(|&price| price == price).unwrap();
+    // Check if the specified price matches the price at the found index
+    require!(price == ctx.accounts.sell_offer.price[index], ErrorCode::PriceError);
+    // Invoke the system program to transfer funds from "from" to the sell offer account
+    anchor_lang::solana_program::program::invoke(
+        &system_instruction::transfer(&ctx.accounts.from.key(), &ctx.accounts.sell_offer.key(), ctx.accounts.sell_offer.price[index]),
+        &[ctx.accounts.from.to_account_info(), ctx.accounts.sell_pda.to_account_info().clone()],
+    ).expect("Error");
+    let system: &mut Account<SystemExchangeAccount> = &mut ctx.accounts.decentralized_exchange_system;
+    let stock_account: &mut Account<StockAccount> = &mut ctx.accounts.stock_account;
+    let seller_account: &mut Account<HolderAccount> = &mut ctx.accounts.seller_account;
+    let buyer_account: &mut Account<HolderAccount> = &mut ctx.accounts.buyer_account;
+    let sell_offer: &mut Account<SellOrBuyAccount> = &mut ctx.accounts.sell_offer;
+    // Increment the historical exchanges counter
+    system.historical_exchanges += 1;
+    // Decrement the total offers counter
+    system.total_offers -= 1;
+    // Decrement the current offers counter in the stock account
+    stock_account.current_offers -= 1;
+    // Subtract the sell or buy amount from the seller's participation
+    seller_account.participation -= sell_offer.sell_or_buy_amount[index];
+    // Add the sell or buy amount to the buyer's participation
+    buyer_account.participation += sell_offer.sell_or_buy_amount[index];
+    // Remove the sell or buy amount at the specified index
+    sell_offer.sell_or_buy_amount.remove(index);
+    // Remove the price at the specified index
+    sell_offer.price.remove(index);
+    // Decrement the length of the sell offer by 16
+    sell_offer.len -= 16;
+    Ok(())
+}
 
 #[derive(Accounts)]
 pub struct AcceptASell<'info> {
@@ -63,5 +76,5 @@ pub struct AcceptASell<'info> {
     /// CHECK: This is not dangerous
     #[account(mut, signer)]
     pub from: AccountInfo<'info>,
-    pub system_program: Program<'info, System>
+    pub system_program: Program<'info, System>,
 }
