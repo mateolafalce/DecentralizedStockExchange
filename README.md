@@ -626,30 +626,43 @@ This function is defined as a Rust public function with the signature pub fn acc
 
 ```rust
 pub fn accept_a_buy(
-        ctx: Context<AcceptABuy>,
-        price: u64
-    ) -> Result<()> {
-        require!(ctx.accounts.stock_account_pda.key() == ctx.accounts.stock_account.key(), ErrorCode::PubkeyError);
-        require!(ctx.accounts.buy_offer.key() == ctx.accounts.buyer_pda.key(), ErrorCode::PubkeyError);
-        let index = ctx.accounts.buy_offer.price.iter().position(|&price| price == price).unwrap();
-        require!(price == ctx.accounts.buy_offer.price[index], ErrorCode::PriceError);
-        **ctx.accounts.buy_offer.to_account_info().try_borrow_mut_lamports()? -= price;
-        **ctx.accounts.from.to_account_info().try_borrow_mut_lamports()? += price;
-        let system: &mut Account<SystemExchangeAccount> = &mut ctx.accounts.decentralized_exchange_system;
-        let stock_account: &mut Account<StockAccount> = &mut ctx.accounts.stock_account;
-        let seller_account: &mut Account<HolderAccount> = &mut ctx.accounts.seller_account;
-        let buyer_account: &mut Account<HolderAccount> = &mut ctx.accounts.buyer_account;
-        let buy_offer: &mut Account<SellOrBuyAccount> = &mut ctx.accounts.buy_offer;
-        system.historical_exchanges += 1;
-        system.total_offers -= 1;
-        stock_account.current_offers -= 1;
-        seller_account.participation -= buy_offer.sell_or_buy_amount[index];
-        buyer_account.participation += buy_offer.sell_or_buy_amount[index];//I
-        buy_offer.sell_or_buy_amount.remove(index);
-        buy_offer.price.remove(index);
-        buy_offer.len -= 16;
-        Ok(())
-    }
+    ctx: Context<AcceptABuy>,
+    price: u64
+) -> Result<()> {
+    // Check if the stock account PDA key matches the stock account key
+    require!(ctx.accounts.stock_account_pda.key() == ctx.accounts.stock_account.key(), ErrorCode::PubkeyError);
+    // Check if the buy offer key matches the buyer PDA key
+    require!(ctx.accounts.buy_offer.key() == ctx.accounts.buyer_pda.key(), ErrorCode::PubkeyError);
+    // Find the index of the price in the buy offer's price vector
+    let index = ctx.accounts.buy_offer.price.iter().position(|&price| price == price).unwrap();
+    // Check if the given price matches the price at the found index
+    require!(price == ctx.accounts.buy_offer.price[index], ErrorCode::PriceError);
+    // Decrease the lamports of the buy offer account by the price
+    **ctx.accounts.buy_offer.to_account_info().try_borrow_mut_lamports()? -= price;
+    // Increase the lamports of the 'from' account by the price
+    **ctx.accounts.from.to_account_info().try_borrow_mut_lamports()? += price;
+    let system: &mut Account<SystemExchangeAccount> = &mut ctx.accounts.decentralized_exchange_system;
+    let stock_account: &mut Account<StockAccount> = &mut ctx.accounts.stock_account;
+    let seller_account: &mut Account<HolderAccount> = &mut ctx.accounts.seller_account;
+    let buyer_account: &mut Account<HolderAccount> = &mut ctx.accounts.buyer_account;
+    let buy_offer: &mut Account<SellOrBuyAccount> = &mut ctx.accounts.buy_offer;
+    // Increment the historical_exchanges count in the system account
+    system.historical_exchanges += 1;
+    // Decrement the total_offers count in the system account
+    system.total_offers -= 1;
+    // Decrement the current_offers count in the stock account
+    stock_account.current_offers -= 1;
+    // Decrease the participation amount in the seller account by the sell_or_buy_amount at the found index
+    seller_account.participation -= buy_offer.sell_or_buy_amount[index];
+    // Increase the participation amount in the buyer account by the sell_or_buy_amount at the found index
+    buyer_account.participation += buy_offer.sell_or_buy_amount[index];
+    // Remove the sell_or_buy_amount and price at the found index from the buy offer
+    buy_offer.sell_or_buy_amount.remove(index);
+    buy_offer.price.remove(index);
+    // Decrease the len field of the buy offer by 16
+    buy_offer.len -= 16;
+    Ok(())
+}
 
 #[derive(Accounts)]
 pub struct AcceptABuy<'info> {
@@ -679,7 +692,7 @@ pub struct AcceptABuy<'info> {
     /// CHECK: This is not dangerous
     #[account(mut, signer)]
     pub from: AccountInfo<'info>,
-    pub system_program: Program<'info, System>
+    pub system_program: Program<'info, System>,
 }
 ```
 
