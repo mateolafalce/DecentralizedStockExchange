@@ -1,9 +1,5 @@
-use crate::errors::ErrorCode;
-use crate::state::accounts::*;
-use anchor_lang::{
-    prelude::*, solana_program::account_info::AccountInfo, solana_program::pubkey::Pubkey,
-    solana_program::system_instruction,
-};
+use crate::{state::accounts::*, validations::*};
+use anchor_lang::{prelude::*, solana_program::*};
 
 pub fn buy_in_initial_public_offering(
     ctx: Context<BuyInitialPublicOffering>,
@@ -16,19 +12,18 @@ pub fn buy_in_initial_public_offering(
         ],
         ctx.program_id,
     );
-    require!(amount > 0, ErrorCode::AmountError);
-    require!(
-        ctx.accounts.stock_account_pda.key() == ctx.accounts.stock_account.key(),
-        ErrorCode::PubkeyError
-    );
-    require!(
-        amount <= ctx.accounts.stock_account.total_supply,
-        ErrorCode::SupplyError
-    );
-    require!(
-        holder_pda.key() == ctx.accounts.holder_account.key(),
-        ErrorCode::HolderError
-    );
+
+    //validations
+    equal_accounts(
+        ctx.accounts.stock_account_pda.key(),
+        ctx.accounts.stock_account.key(),
+    )
+    .unwrap();
+    equal_accounts(holder_pda.key(), ctx.accounts.holder_account.key()).unwrap();
+    greater_than_0(amount).unwrap();
+    less_or_equal_than(amount, ctx.accounts.stock_account.total_supply).unwrap();
+
+    //lamport transfer
     let amount_to_send: u64 = ctx.accounts.stock_account.price_to_go_public * amount;
     anchor_lang::solana_program::program::invoke(
         &system_instruction::transfer(
@@ -42,13 +37,17 @@ pub fn buy_in_initial_public_offering(
         ],
     )
     .expect("Error");
-    let system: &mut Account<SystemExchangeAccount> =
-        &mut ctx.accounts.decentralized_exchange_system;
-    let holder_account: &mut Account<HolderAccount> = &mut ctx.accounts.holder_account;
-    let stock_account: &mut Account<StockAccount> = &mut ctx.accounts.stock_account;
-    holder_account.participation = amount;
-    stock_account.supply_in_position -= amount;
-    system.historical_exchanges += 1;
+
+    //get &mut accounts
+    let system = &mut ctx.accounts.decentralized_exchange_system;
+    let holder_account = &mut ctx.accounts.holder_account;
+    let stock_account = &mut ctx.accounts.stock_account;
+
+    //update state
+    holder_account.set_participation(amount);
+    stock_account.sub_supply_in_position(amount);
+    system.add_historical_exchanges();
+
     Ok(())
 }
 
@@ -56,13 +55,17 @@ pub fn buy_in_initial_public_offering(
 pub struct BuyInitialPublicOffering<'info> {
     #[account(mut, seeds = [b"System Account"], bump = decentralized_exchange_system.bump_original)]
     pub decentralized_exchange_system: Account<'info, SystemExchangeAccount>,
+
     #[account(mut, seeds = [b"Stock Account", stock_account.pubkey_original.key().as_ref()], bump = stock_account.bump_original)]
     pub stock_account: Account<'info, StockAccount>,
+
     #[account(mut, seeds = [stock_account_pda.key().as_ref(), from.key().as_ref()], bump = holder_account.bump_original)]
     pub holder_account: Account<'info, HolderAccount>,
+
     /// CHECK: This is not dangerous
     #[account(mut)]
     pub stock_account_pda: AccountInfo<'info>,
+
     /// CHECK: This is not dangerous
     #[account(mut, signer)]
     pub from: AccountInfo<'info>,

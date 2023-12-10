@@ -1,8 +1,5 @@
-use crate::errors::ErrorCode;
-use crate::state::accounts::*;
-use anchor_lang::{
-    prelude::*, solana_program::account_info::AccountInfo, solana_program::pubkey::Pubkey,
-};
+use crate::{state::accounts::*, utils::utils::*, validations::*};
+use anchor_lang::prelude::*;
 
 pub fn create_stock(
     ctx: Context<CreateStock>,
@@ -18,36 +15,29 @@ pub fn create_stock(
         &[b"Stock Account", ctx.accounts.from.key().as_ref()],
         ctx.program_id,
     );
-    // Check if the name length is within the allowed limit
-    require!(name.len() <= 50, ErrorCode::NameError);
-    // Check if the description length is within the allowed limit
-    require!(description.len() <= 200, ErrorCode::DescriptionError);
-    // Check if the specified date to go public is in the future
-    require!(
-        date_to_go_public > Clock::get().unwrap().unix_timestamp,
-        ErrorCode::Date
-    );
-    let system: &mut Account<SystemExchangeAccount> =
-        &mut ctx.accounts.decentralized_exchange_system;
-    let stock_account: &mut Account<StockAccount> = &mut ctx.accounts.stock_account;
-    // Increment the total stock companies count in the decentralized exchange system
-    system.total_stock_companies += 1;
-    stock_account.bump_original = bump;
-    // Set the original pubkey for the stock account
-    stock_account.pubkey_original = ctx.accounts.from.key();
-    // Set variables
-    stock_account.name = name;
-    stock_account.description = description;
-    stock_account.total_supply = total_supply;
-    stock_account.supply_in_position = total_supply;
-    stock_account.holders = 1;
-    stock_account.dividends = dividends;
-    // Set the dividend payment period for the stock account
-    stock_account.dividend_payment_period = dividend_payment_period;
-    // Set the date to go public for the stock account
-    stock_account.date_to_go_public = date_to_go_public;
-    // Set the price to go public for the stock account
-    stock_account.price_to_go_public = price_to_go_public;
+
+    //validations
+    less_or_equal_than(name.len() as u64, NAME).unwrap();
+    less_or_equal_than(description.len() as u64, DESCRIPTION).unwrap();
+    check_current_time(date_to_go_public).unwrap();
+
+    //get &mut accounts
+    let system = &mut ctx.accounts.decentralized_exchange_system;
+    let stock_account = &mut ctx.accounts.stock_account;
+
+    //update state
+    system.add_total_stock_companies();
+    stock_account.set_bump(bump);
+    stock_account.set_pubkey(ctx.accounts.from.key());
+    stock_account.set_name(name);
+    stock_account.set_description(description);
+    stock_account.set_total_supply(total_supply);
+    stock_account.set_supply_in_position(total_supply);
+    stock_account.init_holders();
+    stock_account.set_dividends(dividends);
+    stock_account.set_dividend_payment_period(dividend_payment_period);
+    stock_account.set_date_to_go_public(date_to_go_public);
+    stock_account.set_price_to_go_public(price_to_go_public);
 
     Ok(())
 }
@@ -56,10 +46,13 @@ pub fn create_stock(
 pub struct CreateStock<'info> {
     #[account(mut, seeds = [b"System Account"], bump = decentralized_exchange_system.bump_original)]
     pub decentralized_exchange_system: Account<'info, SystemExchangeAccount>,
+
     #[account(init, seeds = [b"Stock Account", from.key().as_ref()], bump, payer = from, space = StockAccount::SIZE + 8)]
     pub stock_account: Account<'info, StockAccount>,
+
     /// CHECK: This is not dangerous
     #[account(mut, signer)]
     pub from: AccountInfo<'info>,
+
     pub system_program: Program<'info, System>,
 }

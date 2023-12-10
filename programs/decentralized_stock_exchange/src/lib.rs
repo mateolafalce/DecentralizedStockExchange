@@ -73,8 +73,8 @@ pub mod decentralized_exchange {
         instructions::cancel_buy::cancel_buy(ctx, price_to_cancel)
     }
 
-    pub fn accept_a_sell(ctx: Context<AcceptASell>, price: u64) -> Result<()> {
-        instructions::accept_a_sell::accept_a_sell(ctx, price)
+    pub fn accept_a_sell(ctx: Context<AcceptASell>, amount: u64) -> Result<()> {
+        instructions::accept_a_sell::accept_a_sell(ctx, amount)
     }
 
     pub fn accept_a_buy(ctx: Context<AcceptABuy>, amount: u64) -> Result<()> {

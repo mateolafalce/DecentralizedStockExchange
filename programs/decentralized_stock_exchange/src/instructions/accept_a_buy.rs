@@ -1,6 +1,6 @@
 use crate::{
     state::accounts::*,
-    utils::utils::{get_index, pda_transfer},
+    utils::utils::{get_index, pda_transfer, PRODUCT},
     validations::*,
 };
 use anchor_lang::{
@@ -41,7 +41,7 @@ pub fn accept_a_buy(ctx: Context<AcceptABuy>, amount: u64) -> Result<()> {
     buyer_account.add_participation(buy_offer.sell_or_buy_amount[index]);
     buy_offer.sell_or_buy_amount.remove(index);
     buy_offer.price.remove(index);
-    buy_offer.sub_len(16);
+    buy_offer.sub_len(PRODUCT);
 
     Ok(())
 }
@@ -64,7 +64,7 @@ pub struct AcceptABuy<'info> {
         mut,
         seeds = [b"Buy Account", stock_account_pda.key().as_ref(), from.key().as_ref()],
         bump = buy_offer.bump_original,
-        realloc = 8 + buy_offer.len as usize - 16,
+        realloc = 8 + buy_offer.len as usize - PRODUCT as usize,
         realloc::payer = from,
         realloc::zero = false,
     )]
