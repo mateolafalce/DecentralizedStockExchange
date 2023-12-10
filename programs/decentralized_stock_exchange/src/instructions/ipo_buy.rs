@@ -14,13 +14,12 @@ pub fn buy_in_initial_public_offering(
     );
 
     //validations
-    equal_accounts(
+    require_keys_eq!(
         ctx.accounts.stock_account_pda.key(),
         ctx.accounts.stock_account.key(),
-    )
-    .unwrap();
-    equal_accounts(holder_pda.key(), ctx.accounts.holder_account.key()).unwrap();
-    greater_than_0(amount).unwrap();
+    );
+    require_keys_eq!(holder_pda.key(), ctx.accounts.holder_account.key());
+    require_gt!(amount, 0);
     less_or_equal_than(amount, ctx.accounts.stock_account.total_supply).unwrap();
 
     //lamport transfer

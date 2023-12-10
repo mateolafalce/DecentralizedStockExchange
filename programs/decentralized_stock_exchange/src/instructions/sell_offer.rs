@@ -12,15 +12,14 @@ pub fn sell_offer(ctx: Context<SellOffer>, sell_amount: u64, price: u64) -> Resu
     ctx.accounts.sell_offer.price.push(price);
 
     //validations
-    equal_accounts(
+    require_keys_eq!(
         ctx.accounts.stock_account_pda.key(),
         ctx.accounts.stock_account.key(),
-    )
-    .unwrap();
-    equal_accounts(holder_pda.key(), ctx.accounts.holder_account.key()).unwrap();
+    );
+    require_keys_eq!(holder_pda.key(), ctx.accounts.holder_account.key());
     less_or_equal_than(sell_amount, ctx.accounts.holder_account.participation).unwrap();
     check_unique_of_price(ctx.accounts.sell_offer.price.clone()).unwrap();
-    greater_than_0(sell_amount).unwrap();
+    require_gt!(sell_amount, 0);
 
     //get &mut accounts
     let system = &mut ctx.accounts.decentralized_exchange_system;

@@ -1,16 +1,15 @@
-use crate::{state::accounts::*, utils::utils::*, validations::*};
+use crate::{state::accounts::*, utils::utils::*};
 use anchor_lang::{prelude::*, solana_program::*};
 
 pub fn accept_a_sell(ctx: Context<AcceptASell>, amount: u64) -> Result<()> {
     let index: usize = get_index(ctx.accounts.sell_offer.price.clone());
     //validations
-    equal_accounts(
+    require_keys_eq!(
         ctx.accounts.stock_account_pda.key(),
         ctx.accounts.stock_account.key(),
-    )
-    .unwrap();
-    equal_accounts(ctx.accounts.sell_offer.key(), ctx.accounts.sell_pda.key()).unwrap();
-    equal_price(amount, ctx.accounts.sell_offer.price[index]).unwrap();
+    );
+    require_keys_eq!(ctx.accounts.sell_offer.key(), ctx.accounts.sell_pda.key());
+    require_eq!(amount, ctx.accounts.sell_offer.price[index]);
 
     //lamport transfer
     anchor_lang::solana_program::program::invoke(

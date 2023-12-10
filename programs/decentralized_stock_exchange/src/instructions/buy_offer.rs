@@ -11,15 +11,14 @@ pub fn buy_offer(ctx: Context<BuyOffer>, buy_amount: u64, price: u64) -> Result<
     );
 
     //validations
-    equal_accounts(holder_pda.key(), ctx.accounts.holder_account.key()).unwrap();
-    equal_accounts(ctx.accounts.buy_offer.key(), ctx.accounts.buy_pda.key()).unwrap();
-    equal_accounts(
+    require_keys_eq!(holder_pda.key(), ctx.accounts.holder_account.key());
+    require_keys_eq!(ctx.accounts.buy_offer.key(), ctx.accounts.buy_pda.key());
+    require_keys_eq!(
         ctx.accounts.stock_account_pda.key(),
         ctx.accounts.stock_account.key(),
-    )
-    .unwrap();
+    );
     less_or_equal_than(buy_amount, ctx.accounts.stock_account.total_supply).unwrap();
-    greater_than_0(buy_amount).unwrap();
+    require_gt!(buy_amount, 0);
 
     // lamports transfer
     anchor_lang::solana_program::program::invoke(

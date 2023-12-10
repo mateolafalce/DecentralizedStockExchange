@@ -1,4 +1,4 @@
-use crate::{state::accounts::*, validations::*};
+use crate::state::accounts::*;
 use anchor_lang::prelude::*;
 
 pub fn init_holder_account(ctx: Context<InitHolderAccount>) -> Result<()> {
@@ -10,11 +10,10 @@ pub fn init_holder_account(ctx: Context<InitHolderAccount>) -> Result<()> {
         ctx.program_id,
     );
     //validations
-    equal_accounts(
+    require_keys_eq!(
         ctx.accounts.stock_account_pda.key(),
         ctx.accounts.stock_account.key(),
-    )
-    .unwrap();
+    );
 
     //get &mut accounts
     let system = &mut ctx.accounts.decentralized_exchange_system;

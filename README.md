@@ -118,17 +118,17 @@ pub fn init_holder_account(ctx: Context<InitHolderAccount>) -> Result<()> {
         ctx.program_id,
     );
     //validations
-    equal_accounts(
+    require_keys_eq!(
         ctx.accounts.stock_account_pda.key(),
         ctx.accounts.stock_account.key(),
-    )
-    .unwrap();
+    );
 
     //get &mut accounts
     let system = &mut ctx.accounts.decentralized_exchange_system;
     let holder_account = &mut ctx.accounts.holder_account;
     let stock_account = &mut ctx.accounts.stock_account;
 
+    //update state
     holder_account.set_bump(bump);
     holder_account.init_participation();
     holder_account.set_holder_pubkey(ctx.accounts.from.key());
@@ -161,11 +161,10 @@ pub fn init_buy_account(ctx: Context<InitBuyAccount>) -> Result<()> {
     );
 
     //validation
-    equal_accounts(
+    require_keys_eq!(
         ctx.accounts.stock_account_pda.key(),
         ctx.accounts.stock_account.key(),
-    )
-    .unwrap();
+    );
 
     //get &mut account
     let buy_offer = &mut ctx.accounts.buy_offer;
@@ -200,16 +199,14 @@ pub fn init_sell_account(ctx: Context<InitSellAccount>) -> Result<()> {
     );
 
     //validations
-    equal_accounts(
+    require_keys_eq!(
         ctx.accounts.stock_account_pda.key(),
         ctx.accounts.stock_account.key(),
-    )
-    .unwrap();
-    equal_accounts(
+    );
+    require_keys_eq!(
         ctx.accounts.stock_account_pda.key(),
         ctx.accounts.stock_account.key(),
-    )
-    .unwrap();
+    );
 
     //get &mut accounts
     let sell_offer = &mut ctx.accounts.sell_offer;
@@ -246,13 +243,12 @@ pub fn buy_in_initial_public_offering(
     );
 
     //validations
-    equal_accounts(
+    require_keys_eq!(
         ctx.accounts.stock_account_pda.key(),
         ctx.accounts.stock_account.key(),
-    )
-    .unwrap();
-    equal_accounts(holder_pda.key(), ctx.accounts.holder_account.key()).unwrap();
-    greater_than_0(amount).unwrap();
+    );
+    require_keys_eq!(holder_pda.key(), ctx.accounts.holder_account.key());
+    require_gt!(amount, 0);
     less_or_equal_than(amount, ctx.accounts.stock_account.total_supply).unwrap();
 
     //lamport transfer
@@ -305,15 +301,14 @@ pub fn sell_offer(ctx: Context<SellOffer>, sell_amount: u64, price: u64) -> Resu
     ctx.accounts.sell_offer.price.push(price);
 
     //validations
-    equal_accounts(
+    require_keys_eq!(
         ctx.accounts.stock_account_pda.key(),
         ctx.accounts.stock_account.key(),
-    )
-    .unwrap();
-    equal_accounts(holder_pda.key(), ctx.accounts.holder_account.key()).unwrap();
+    );
+    require_keys_eq!(holder_pda.key(), ctx.accounts.holder_account.key());
     less_or_equal_than(sell_amount, ctx.accounts.holder_account.participation).unwrap();
     check_unique_of_price(ctx.accounts.sell_offer.price.clone()).unwrap();
-    greater_than_0(sell_amount).unwrap();
+    require_gt!(sell_amount, 0).unwrap();
 
     //get &mut accounts
     let system = &mut ctx.accounts.decentralized_exchange_system;
@@ -350,14 +345,14 @@ pub fn buy_offer(ctx: Context<BuyOffer>, buy_amount: u64, price: u64) -> Result<
     );
 
     //validations
-    equal_accounts(holder_pda.key(), ctx.accounts.holder_account.key()).unwrap();
-    equal_accounts(ctx.accounts.buy_offer.key(), ctx.accounts.buy_pda.key()).unwrap();
-    equal_accounts(
+    require_keys_eq!(holder_pda.key(), ctx.accounts.holder_account.key());
+    require_keys_eq!(ctx.accounts.buy_offer.key(), ctx.accounts.buy_pda.key());
+    require_keys_eq!(
         ctx.accounts.stock_account_pda.key(),
         ctx.accounts.stock_account.key(),
-    ).unwrap();
+    );
     less_or_equal_than(buy_amount, ctx.accounts.stock_account.total_supply).unwrap();
-    greater_than_0(buy_amount).unwrap();
+    require_gt!(buy_amount, 0);
 
     // lamports transfer
     anchor_lang::solana_program::program::invoke(
@@ -376,7 +371,6 @@ pub fn buy_offer(ctx: Context<BuyOffer>, buy_amount: u64, price: u64) -> Result<
     //get &mut accounts
     let system = &mut ctx.accounts.decentralized_exchange_system;
     let stock_account = &mut ctx.accounts.stock_account;
-    let holder_account = &mut ctx.accounts.holder_account;
     let buy_offer = &mut ctx.accounts.buy_offer;
 
     //update state
@@ -396,21 +390,20 @@ The accounts for the decentralized systems and the assets involved in the offer 
 
 ---
 
-## Accept a sell offer 👍
+## Accept a sell offer 
 
 ```rust
 pub fn accept_a_sell(ctx: Context<AcceptASell>, amount: u64) -> Result<()> {
     let index: usize = get_index(ctx.accounts.sell_offer.price.clone());
-    /*validations*/
-    equal_accounts(
+    //validations
+    require_keys_eq!(
         ctx.accounts.stock_account_pda.key(),
         ctx.accounts.stock_account.key(),
-    )
-    .unwrap();
-    equal_accounts(ctx.accounts.sell_offer.key(), ctx.accounts.sell_pda.key()).unwrap();
-    equal_price(amount, ctx.accounts.sell_offer.price[index]).unwrap();
+    );
+    require_keys_eq!(ctx.accounts.sell_offer.key(), ctx.accounts.sell_pda.key());
+    require_eq!(amount, ctx.accounts.sell_offer.price[index]);
 
-    /*lamport transfer*/
+    //lamport transfer
     anchor_lang::solana_program::program::invoke(
         &system_instruction::transfer(
             &ctx.accounts.from.key(),
@@ -424,14 +417,14 @@ pub fn accept_a_sell(ctx: Context<AcceptASell>, amount: u64) -> Result<()> {
     )
     .expect("Error");
 
-    /*get &mut accounts*/
+    //get &mut accounts
     let system = &mut ctx.accounts.decentralized_exchange_system;
     let stock_account = &mut ctx.accounts.stock_account;
     let seller_account = &mut ctx.accounts.seller_account;
     let buyer_account = &mut ctx.accounts.buyer_account;
     let sell_offer = &mut ctx.accounts.sell_offer;
 
-    /*update state*/
+    //update state
     system.add_historical_exchanges();
     system.sub_total_offers();
     stock_account.sub_current_offers();
@@ -459,14 +452,13 @@ If the sell offer is valid, the function invokes the system_instruction::transfe
 ```rust
 pub fn accept_a_buy(ctx: Context<AcceptABuy>, amount: u64) -> Result<()> {
     let index: usize = get_index(ctx.accounts.buy_offer.price.clone());
-    /*validations*/
-    equal_accounts(
+    //validations
+    require_keys_eq!(
         ctx.accounts.stock_account_pda.key(),
         ctx.accounts.stock_account.key(),
-    )
-    .unwrap();
-    equal_accounts(ctx.accounts.buy_offer.key(), ctx.accounts.buyer_pda.key()).unwrap();
-    equal_price(amount, ctx.accounts.buy_offer.price[index]).unwrap();
+    );
+    require_keys_eq!(ctx.accounts.buy_offer.key(), ctx.accounts.buyer_pda.key());
+    require_eq!(amount, ctx.accounts.buy_offer.price[index]);
 
     /*pda lamport transfer*/
     pda_transfer(
@@ -476,14 +468,14 @@ pub fn accept_a_buy(ctx: Context<AcceptABuy>, amount: u64) -> Result<()> {
     )
     .unwrap();
 
-    /*get &mut accounts*/
+    //get &mut accounts
     let system = &mut ctx.accounts.decentralized_exchange_system;
     let stock_account = &mut ctx.accounts.stock_account;
     let seller_account = &mut ctx.accounts.seller_account;
     let buyer_account = &mut ctx.accounts.buyer_account;
     let buy_offer = &mut ctx.accounts.buy_offer;
 
-    /*update state*/
+    //update state
     system.add_historical_exchanges();
     system.sub_total_offers();
     stock_account.sub_current_offers();
@@ -491,7 +483,7 @@ pub fn accept_a_buy(ctx: Context<AcceptABuy>, amount: u64) -> Result<()> {
     buyer_account.add_participation(buy_offer.sell_or_buy_amount[index]);
     buy_offer.sell_or_buy_amount.remove(index);
     buy_offer.price.remove(index);
-    buy_offer.sub_len(16);
+    buy_offer.sub_len(PRODUCT);
 
     Ok(())
 }
@@ -515,14 +507,13 @@ pub fn cancel_sell(ctx: Context<CancelSellOffer>, price_to_cancel: u64) -> Resul
     );
 
     //validations
-    equal_accounts(
+    require_keys_eq!(
         ctx.accounts.stock_account_pda.key(),
         ctx.accounts.stock_account.key(),
-    )
-    .unwrap();
-    equal_accounts(holder_pda.key(), ctx.accounts.holder_account.key()).unwrap();
+    );
+    require_keys_eq!(holder_pda.key(), ctx.accounts.holder_account.key());
     greater_than_0(price_to_cancel).unwrap();
-    equal_price(price_to_cancel, ctx.accounts.sell_offer.price[index]).unwrap();
+    require_eq!(price_to_cancel, ctx.accounts.sell_offer.price[index]);
 
     //get &mut accounts
     let system = &mut ctx.accounts.decentralized_exchange_system;
@@ -553,14 +544,14 @@ Then looks up the sales quote in the sales account and removes the sales quote c
 ```rust
 pub fn cancel_buy(ctx: Context<CancelBuyOffer>, price_to_cancel: u64) -> Result<()> {
     let index: usize = get_index(ctx.accounts.buy_offer.price.clone());
+
     //validations
-    equal_accounts(
+    require_keys_eq!(
         ctx.accounts.stock_account_pda.key(),
         ctx.accounts.stock_account.key(),
-    )
-    .unwrap();
-    equal_accounts(ctx.accounts.buy_offer.key(), ctx.accounts.buy_pda.key()).unwrap();
-    equal_price(price_to_cancel, ctx.accounts.buy_offer.price[index]).unwrap();
+    );
+    require_keys_eq!(ctx.accounts.buy_offer.key(), ctx.accounts.buy_pda.key());
+    require_eq!(price_to_cancel, ctx.accounts.buy_offer.price[index]);
 
     //sign tx
     pda_transfer(

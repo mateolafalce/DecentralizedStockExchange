@@ -1,7 +1,6 @@
 use crate::{
     state::accounts::*,
     utils::utils::{get_index, pda_transfer, PRODUCT},
-    validations::*,
 };
 use anchor_lang::{
     prelude::*, solana_program::account_info::AccountInfo, solana_program::pubkey::Pubkey,
@@ -9,14 +8,13 @@ use anchor_lang::{
 
 pub fn accept_a_buy(ctx: Context<AcceptABuy>, amount: u64) -> Result<()> {
     let index: usize = get_index(ctx.accounts.buy_offer.price.clone());
-    /*validations*/
-    equal_accounts(
+    //validations
+    require_keys_eq!(
         ctx.accounts.stock_account_pda.key(),
         ctx.accounts.stock_account.key(),
-    )
-    .unwrap();
-    equal_accounts(ctx.accounts.buy_offer.key(), ctx.accounts.buyer_pda.key()).unwrap();
-    equal_price(amount, ctx.accounts.buy_offer.price[index]).unwrap();
+    );
+    require_keys_eq!(ctx.accounts.buy_offer.key(), ctx.accounts.buyer_pda.key());
+    require_eq!(amount, ctx.accounts.buy_offer.price[index]);
 
     /*pda lamport transfer*/
     pda_transfer(
@@ -26,14 +24,14 @@ pub fn accept_a_buy(ctx: Context<AcceptABuy>, amount: u64) -> Result<()> {
     )
     .unwrap();
 
-    /*get &mut accounts*/
+    //get &mut accounts
     let system = &mut ctx.accounts.decentralized_exchange_system;
     let stock_account = &mut ctx.accounts.stock_account;
     let seller_account = &mut ctx.accounts.seller_account;
     let buyer_account = &mut ctx.accounts.buyer_account;
     let buy_offer = &mut ctx.accounts.buy_offer;
 
-    /*update state*/
+    //update state
     system.add_historical_exchanges();
     system.sub_total_offers();
     stock_account.sub_current_offers();

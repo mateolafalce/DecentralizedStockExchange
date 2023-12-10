@@ -1,4 +1,4 @@
-use crate::{state::accounts::*, utils::utils::*, validations::*};
+use crate::{state::accounts::*, utils::utils::*, };
 use anchor_lang::prelude::*;
 
 pub fn cancel_sell(ctx: Context<CancelSellOffer>, price_to_cancel: u64) -> Result<()> {
@@ -12,14 +12,13 @@ pub fn cancel_sell(ctx: Context<CancelSellOffer>, price_to_cancel: u64) -> Resul
     );
 
     //validations
-    equal_accounts(
+    require_keys_eq!(
         ctx.accounts.stock_account_pda.key(),
         ctx.accounts.stock_account.key(),
-    )
-    .unwrap();
-    equal_accounts(holder_pda.key(), ctx.accounts.holder_account.key()).unwrap();
-    greater_than_0(price_to_cancel).unwrap();
-    equal_price(price_to_cancel, ctx.accounts.sell_offer.price[index]).unwrap();
+    );
+    require_keys_eq!(holder_pda.key(), ctx.accounts.holder_account.key());
+    require_gt!(price_to_cancel, 0);
+    require_eq!(price_to_cancel, ctx.accounts.sell_offer.price[index]);
 
     //get &mut accounts
     let system = &mut ctx.accounts.decentralized_exchange_system;

@@ -1,4 +1,4 @@
-use crate::{state::accounts::*, utils::utils::*, validations::*};
+use crate::{state::accounts::*, utils::utils::*};
 use anchor_lang::prelude::*;
 
 pub fn init_buy_account(ctx: Context<InitBuyAccount>) -> Result<()> {
@@ -12,11 +12,10 @@ pub fn init_buy_account(ctx: Context<InitBuyAccount>) -> Result<()> {
     );
 
     //validation
-    equal_accounts(
+    require_keys_eq!(
         ctx.accounts.stock_account_pda.key(),
         ctx.accounts.stock_account.key(),
-    )
-    .unwrap();
+    );
 
     //get &mut account
     let buy_offer = &mut ctx.accounts.buy_offer;

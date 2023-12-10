@@ -1,17 +1,16 @@
-use crate::{state::accounts::*, utils::utils::*, validations::*};
+use crate::{state::accounts::*, utils::utils::*};
 use anchor_lang::prelude::*;
 
 pub fn cancel_buy(ctx: Context<CancelBuyOffer>, price_to_cancel: u64) -> Result<()> {
     let index: usize = get_index(ctx.accounts.buy_offer.price.clone());
 
     //validations
-    equal_accounts(
+    require_keys_eq!(
         ctx.accounts.stock_account_pda.key(),
         ctx.accounts.stock_account.key(),
-    )
-    .unwrap();
-    equal_accounts(ctx.accounts.buy_offer.key(), ctx.accounts.buy_pda.key()).unwrap();
-    equal_price(price_to_cancel, ctx.accounts.buy_offer.price[index]).unwrap();
+    );
+    require_keys_eq!(ctx.accounts.buy_offer.key(), ctx.accounts.buy_pda.key());
+    require_eq!(price_to_cancel, ctx.accounts.buy_offer.price[index]);
 
     //sign tx
     pda_transfer(
