@@ -1,26 +1,35 @@
-use anchor_lang::{
-    prelude::*,
-    solana_program::account_info::AccountInfo,
-    solana_program::pubkey::Pubkey,
-}; 
-use crate::state::accounts::*;
 use crate::errors::ErrorCode;
+use crate::state::accounts::*;
+use anchor_lang::{
+    prelude::*, solana_program::account_info::AccountInfo, solana_program::pubkey::Pubkey,
+};
 
-pub fn cancel_buy(
-    ctx: Context<CancelBuyOffer>,
-    price_to_cancel: u64
-) -> Result<()> {
+pub fn cancel_buy(ctx: Context<CancelBuyOffer>, price_to_cancel: u64) -> Result<()> {
     // Check if the stock account PDA key matches the provided stock account key
-    require!(ctx.accounts.stock_account_pda.key() == ctx.accounts.stock_account.key(), ErrorCode::PubkeyError);
+    require!(
+        ctx.accounts.stock_account_pda.key() == ctx.accounts.stock_account.key(),
+        ErrorCode::PubkeyError
+    );
     // Check if the buy offer key matches the provided buy PDA key
-    require!(ctx.accounts.buy_offer.key() == ctx.accounts.buy_pda.key(), ErrorCode::PubkeyError);
-    let system: &mut Account<SystemExchangeAccount> = &mut ctx.accounts.decentralized_exchange_system;
+    require!(
+        ctx.accounts.buy_offer.key() == ctx.accounts.buy_pda.key(),
+        ErrorCode::PubkeyError
+    );
+    let system: &mut Account<SystemExchangeAccount> =
+        &mut ctx.accounts.decentralized_exchange_system;
     let stock_account: &mut Account<StockAccount> = &mut ctx.accounts.stock_account;
     let buy_offer: &mut Account<SellOrBuyAccount> = &mut ctx.accounts.buy_offer;
     // Find the index of the price to cancel in the buy offer's price array
-    let index = buy_offer.price.iter().position(|&price| price == price_to_cancel).unwrap();
+    let index = buy_offer
+        .price
+        .iter()
+        .position(|&price| price == price_to_cancel)
+        .unwrap();
     // Check if the price to cancel matches the price at the found index
-    require!(price_to_cancel == buy_offer.price[index], ErrorCode::PriceError);
+    require!(
+        price_to_cancel == buy_offer.price[index],
+        ErrorCode::PriceError
+    );
     // Remove the sell_or_buy_amount and price at the found index
     buy_offer.sell_or_buy_amount.remove(index);
     buy_offer.price.remove(index);
@@ -31,8 +40,16 @@ pub fn cancel_buy(
     // Decrease the current_offers in the stock account by 1
     stock_account.current_offers -= 1;
     // Subtract the price_to_cancel from the buy PDA account and add it to the 'from' account
-    **ctx.accounts.buy_pda.to_account_info().try_borrow_mut_lamports()? -= price_to_cancel;
-    **ctx.accounts.from.to_account_info().try_borrow_mut_lamports()? += price_to_cancel;
+    **ctx
+        .accounts
+        .buy_pda
+        .to_account_info()
+        .try_borrow_mut_lamports()? -= price_to_cancel;
+    **ctx
+        .accounts
+        .from
+        .to_account_info()
+        .try_borrow_mut_lamports()? += price_to_cancel;
     Ok(())
 }
 
@@ -60,5 +77,5 @@ pub struct CancelBuyOffer<'info> {
     /// CHECK: This is not dangerous
     #[account(mut, signer)]
     pub from: AccountInfo<'info>,
-    pub system_program: Program<'info, System>
+    pub system_program: Program<'info, System>,
 }

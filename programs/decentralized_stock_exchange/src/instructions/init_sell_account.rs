@@ -1,23 +1,28 @@
-use anchor_lang::{
-    prelude::*,
-    solana_program::account_info::AccountInfo,
-    solana_program::pubkey::Pubkey,
-};
-use crate::state::accounts::*;
 use crate::errors::ErrorCode;
+use crate::state::accounts::*;
+use anchor_lang::{
+    prelude::*, solana_program::account_info::AccountInfo, solana_program::pubkey::Pubkey,
+};
 
-pub fn init_sell_account(
-    ctx: Context<InitSellAccount>
-) -> Result<()> {
-    let (_sell_pda, bump) = Pubkey::find_program_address(&[
-        b"Sell Account",
-        ctx.accounts.stock_account.key().as_ref(),
-        ctx.accounts.from.key().as_ref()
-    ], ctx.program_id);
+pub fn init_sell_account(ctx: Context<InitSellAccount>) -> Result<()> {
+    let (_sell_pda, bump) = Pubkey::find_program_address(
+        &[
+            b"Sell Account",
+            ctx.accounts.stock_account.key().as_ref(),
+            ctx.accounts.from.key().as_ref(),
+        ],
+        ctx.program_id,
+    );
     // Ensure that the stock account PDA is the same as the stock account
-    require!(ctx.accounts.stock_account_pda.key() == ctx.accounts.stock_account.key(), ErrorCode::PubkeyError);
+    require!(
+        ctx.accounts.stock_account_pda.key() == ctx.accounts.stock_account.key(),
+        ErrorCode::PubkeyError
+    );
     // Ensure that the stock account PDA is the same as the stock account
-    require!(ctx.accounts.stock_account_pda.key() == ctx.accounts.stock_account.key(), ErrorCode::PubkeyError);
+    require!(
+        ctx.accounts.stock_account_pda.key() == ctx.accounts.stock_account.key(),
+        ErrorCode::PubkeyError
+    );
     let sell_offer: &mut Account<SellOrBuyAccount> = &mut ctx.accounts.sell_offer;
     // Set the original bump value for the sell offer account
     sell_offer.bump_original = bump;
@@ -42,5 +47,5 @@ pub struct InitSellAccount<'info> {
     /// CHECK: This is not dangerous
     #[account(mut, signer)]
     pub from: AccountInfo<'info>,
-    pub system_program: Program<'info, System>
+    pub system_program: Program<'info, System>,
 }

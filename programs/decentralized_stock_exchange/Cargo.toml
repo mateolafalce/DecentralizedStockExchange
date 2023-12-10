@@ -1,7 +1,8 @@
 [package]
 name = "decentralized_exchange"
-version = "0.1.0"
-description = "Created with Anchor"
+authors = ["Mateo Lafalce <mateolafalce@protonmail.com>"]
+version = "1.0.0"
+description = "A decentralized stock market"
 edition = "2021"
 
 [lib]
@@ -16,4 +17,4 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-anchor-lang = "0.25.0"
+anchor-lang = "0.29.0"

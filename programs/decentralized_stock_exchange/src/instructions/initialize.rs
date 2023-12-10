@@ -1,14 +1,10 @@
-use anchor_lang::{
-    prelude::*,
-    solana_program::pubkey::Pubkey,
-};
 use crate::state::accounts::*;
+use anchor_lang::{prelude::*, solana_program::pubkey::Pubkey};
 
-pub fn initialize_decentralized_exchange_system(
-    ctx: Context<Initialize>
-) -> Result<()> {
+pub fn initialize_decentralized_exchange_system(ctx: Context<Initialize>) -> Result<()> {
     // Get a mutable reference to the decentralized exchange system account
-    let system: &mut Account<SystemExchangeAccount> = &mut ctx.accounts.decentralized_exchange_system;
+    let system: &mut Account<SystemExchangeAccount> =
+        &mut ctx.accounts.decentralized_exchange_system;
     // Find the program address using the seed "System Account" and program ID
     let (_pda, bump) = Pubkey::find_program_address(&[b"System Account"], ctx.program_id);
     // Set the bump value for the system account
@@ -18,7 +14,7 @@ pub fn initialize_decentralized_exchange_system(
     system.historical_exchanges = 0;
     system.total_holders = 0;
     system.total_offers = 0;
-    Ok(()) 
+    Ok(())
 }
 
 #[derive(Accounts)]

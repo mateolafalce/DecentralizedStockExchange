@@ -1,47 +1,48 @@
-use anchor_lang::{
-    prelude::*,
-    solana_program::account_info::AccountInfo,
-    solana_program::pubkey::Pubkey,
+use crate::{
+    state::accounts::*,
+    utils::utils::{get_index, pda_transfer},
+    validations::*,
 };
-use crate::state::accounts::*;
-use crate::errors::ErrorCode;
+use anchor_lang::{
+    prelude::*, solana_program::account_info::AccountInfo, solana_program::pubkey::Pubkey,
+};
 
-pub fn accept_a_buy(
-    ctx: Context<AcceptABuy>,
-    price: u64
-) -> Result<()> {
-    // Check if the stock account PDA key matches the stock account key
-    require!(ctx.accounts.stock_account_pda.key() == ctx.accounts.stock_account.key(), ErrorCode::PubkeyError);
-    // Check if the buy offer key matches the buyer PDA key
-    require!(ctx.accounts.buy_offer.key() == ctx.accounts.buyer_pda.key(), ErrorCode::PubkeyError);
-    // Find the index of the price in the buy offer's price vector
-    let index = ctx.accounts.buy_offer.price.iter().position(|&price| price == price).unwrap();
-    // Check if the given price matches the price at the found index
-    require!(price == ctx.accounts.buy_offer.price[index], ErrorCode::PriceError);
-    // Decrease the lamports of the buy offer account by the price
-    **ctx.accounts.buy_offer.to_account_info().try_borrow_mut_lamports()? -= price;
-    // Increase the lamports of the 'from' account by the price
-    **ctx.accounts.from.to_account_info().try_borrow_mut_lamports()? += price;
-    let system: &mut Account<SystemExchangeAccount> = &mut ctx.accounts.decentralized_exchange_system;
-    let stock_account: &mut Account<StockAccount> = &mut ctx.accounts.stock_account;
-    let seller_account: &mut Account<HolderAccount> = &mut ctx.accounts.seller_account;
-    let buyer_account: &mut Account<HolderAccount> = &mut ctx.accounts.buyer_account;
-    let buy_offer: &mut Account<SellOrBuyAccount> = &mut ctx.accounts.buy_offer;
-    // Increment the historical_exchanges count in the system account
-    system.historical_exchanges += 1;
-    // Decrement the total_offers count in the system account
-    system.total_offers -= 1;
-    // Decrement the current_offers count in the stock account
-    stock_account.current_offers -= 1;
-    // Decrease the participation amount in the seller account by the sell_or_buy_amount at the found index
-    seller_account.participation -= buy_offer.sell_or_buy_amount[index];
-    // Increase the participation amount in the buyer account by the sell_or_buy_amount at the found index
-    buyer_account.participation += buy_offer.sell_or_buy_amount[index];
-    // Remove the sell_or_buy_amount and price at the found index from the buy offer
+pub fn accept_a_buy(ctx: Context<AcceptABuy>, amount: u64) -> Result<()> {
+    let index: usize = get_index(ctx.accounts.buy_offer.price.clone());
+    /*validations*/
+    equal_accounts(
+        ctx.accounts.stock_account_pda.key(),
+        ctx.accounts.stock_account.key(),
+    )
+    .unwrap();
+    equal_accounts(ctx.accounts.buy_offer.key(), ctx.accounts.buyer_pda.key()).unwrap();
+    equal_price(amount, ctx.accounts.buy_offer.price[index]).unwrap();
+
+    /*pda lamport transfer*/
+    pda_transfer(
+        ctx.accounts.buy_offer.to_account_info(),
+        ctx.accounts.from.to_account_info(),
+        amount,
+    )
+    .unwrap();
+
+    /*get &mut accounts*/
+    let system = &mut ctx.accounts.decentralized_exchange_system;
+    let stock_account = &mut ctx.accounts.stock_account;
+    let seller_account = &mut ctx.accounts.seller_account;
+    let buyer_account = &mut ctx.accounts.buyer_account;
+    let buy_offer = &mut ctx.accounts.buy_offer;
+
+    /*update state*/
+    system.add_historical_exchanges();
+    system.sub_total_offers();
+    stock_account.sub_current_offers();
+    seller_account.sub_participation(buy_offer.sell_or_buy_amount[index]);
+    buyer_account.add_participation(buy_offer.sell_or_buy_amount[index]);
     buy_offer.sell_or_buy_amount.remove(index);
     buy_offer.price.remove(index);
-    // Decrease the len field of the buy offer by 16
-    buy_offer.len -= 16;
+    buy_offer.sub_len(16);
+
     Ok(())
 }
 
@@ -49,12 +50,16 @@ pub fn accept_a_buy(
 pub struct AcceptABuy<'info> {
     #[account(mut, seeds = [b"System Account"], bump = decentralized_exchange_system.bump_original)]
     pub decentralized_exchange_system: Account<'info, SystemExchangeAccount>,
+
     #[account(mut, seeds = [b"Stock Account", stock_account.pubkey_original.key().as_ref()], bump = stock_account.bump_original)]
     pub stock_account: Account<'info, StockAccount>,
+
     #[account(mut, seeds = [stock_account_pda.key().as_ref(), from.key().as_ref()], bump = seller_account.bump_original)]
     pub seller_account: Account<'info, HolderAccount>,
+
     #[account(mut, seeds = [stock_account_pda.key().as_ref(), from.key().as_ref()], bump = buyer_account.bump_original)]
     pub buyer_account: Account<'info, HolderAccount>,
+
     #[account(
         mut,
         seeds = [b"Buy Account", stock_account_pda.key().as_ref(), from.key().as_ref()],
@@ -64,12 +69,15 @@ pub struct AcceptABuy<'info> {
         realloc::zero = false,
     )]
     pub buy_offer: Account<'info, SellOrBuyAccount>,
+
     /// CHECK: This is not dangerous
     #[account(mut)]
     pub stock_account_pda: AccountInfo<'info>,
+
     /// CHECK: This is not dangerous
     #[account(mut)]
     pub buyer_pda: AccountInfo<'info>,
+
     /// CHECK: This is not dangerous
     #[account(mut, signer)]
     pub from: AccountInfo<'info>,

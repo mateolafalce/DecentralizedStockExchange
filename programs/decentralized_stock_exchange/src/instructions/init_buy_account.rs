@@ -1,17 +1,17 @@
-use anchor_lang::{
-    prelude::*,
-    solana_program::account_info::AccountInfo,
-    solana_program::pubkey::Pubkey,
-};
-use crate::state::accounts::*;
 use crate::errors::ErrorCode;
+use crate::state::accounts::*;
+use anchor_lang::{
+    prelude::*, solana_program::account_info::AccountInfo, solana_program::pubkey::Pubkey,
+};
 
-pub fn init_buy_account(
-    ctx: Context<InitBuyAccount>
-) -> Result<()> {
+pub fn init_buy_account(ctx: Context<InitBuyAccount>) -> Result<()> {
     let (_buy_pda, bump) = Pubkey::find_program_address(
-        &[b"Buy Account", ctx.accounts.stock_account_pda.key().as_ref(), ctx.accounts.from.key().as_ref()],
-        ctx.program_id
+        &[
+            b"Buy Account",
+            ctx.accounts.stock_account_pda.key().as_ref(),
+            ctx.accounts.from.key().as_ref(),
+        ],
+        ctx.program_id,
     );
     // Ensure that the stock account PDA key matches the provided stock account key
     require!(
@@ -41,5 +41,5 @@ pub struct InitBuyAccount<'info> {
     /// CHECK: This is not dangerous
     #[account(mut, signer)]
     pub from: AccountInfo<'info>,
-    pub system_program: Program<'info, System>
+    pub system_program: Program<'info, System>,
 }

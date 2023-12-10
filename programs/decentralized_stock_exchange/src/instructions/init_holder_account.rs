@@ -1,18 +1,23 @@
-use anchor_lang::{
-    prelude::*,
-    solana_program::pubkey::Pubkey
-};
-use crate::state::accounts::*;
 use crate::errors::ErrorCode;
+use crate::state::accounts::*;
+use anchor_lang::{prelude::*, solana_program::pubkey::Pubkey};
 
-pub fn init_holder_account(
-    ctx: Context<InitHolderAccount>
-) -> Result<()> {
+pub fn init_holder_account(ctx: Context<InitHolderAccount>) -> Result<()> {
     // Checks if the stock account PDA key matches the stock account key
-    require!(ctx.accounts.stock_account_pda.key() == ctx.accounts.stock_account.key(), ErrorCode::PubkeyError);
+    require!(
+        ctx.accounts.stock_account_pda.key() == ctx.accounts.stock_account.key(),
+        ErrorCode::PubkeyError
+    );
     // Finds the program address for the holder account
-    let (_holder_pda, bump) = Pubkey::find_program_address(&[ctx.accounts.stock_account.key().as_ref(), ctx.accounts.from.key().as_ref()], ctx.program_id);
-    let system: &mut Account<SystemExchangeAccount> = &mut ctx.accounts.decentralized_exchange_system;
+    let (_holder_pda, bump) = Pubkey::find_program_address(
+        &[
+            ctx.accounts.stock_account.key().as_ref(),
+            ctx.accounts.from.key().as_ref(),
+        ],
+        ctx.program_id,
+    );
+    let system: &mut Account<SystemExchangeAccount> =
+        &mut ctx.accounts.decentralized_exchange_system;
     let holder_account: &mut Account<HolderAccount> = &mut ctx.accounts.holder_account;
     let stock_account: &mut Account<StockAccount> = &mut ctx.accounts.stock_account;
     // Sets the bump value for the holder account
@@ -39,5 +44,5 @@ pub struct InitHolderAccount<'info> {
     /// CHECK: This is not dangerous
     #[account(mut, signer)]
     pub from: AccountInfo<'info>,
-    pub system_program: Program<'info, System>
+    pub system_program: Program<'info, System>,
 }

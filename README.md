@@ -26,34 +26,9 @@ By using web3, the technology that enables interaction with the blockchain, user
 
 ---
 
-## Initialize the market account 🐻
+## Initialize the market account 
 
 ```rust
-pub fn initialize_decentralized_exchange_system(
-    ctx: Context<Initialize>
-) -> Result<()> {
-    // Get a mutable reference to the decentralized exchange system account
-    let system: &mut Account<SystemExchangeAccount> = &mut ctx.accounts.decentralized_exchange_system;
-    // Find the program address using the seed "System Account" and program ID
-    let (_pda, bump) = Pubkey::find_program_address(&[b"System Account"], ctx.program_id);
-    // Set the bump value for the system account
-    system.bump_original = bump;
-    // Initialize various system account fields
-    system.total_stock_companies = 0;
-    system.historical_exchanges = 0;
-    system.total_holders = 0;
-    system.total_offers = 0;
-    Ok(())
-}
-
-#[derive(Accounts)]
-pub struct Initialize<'info> {
-    #[account(init, seeds = [b"System Account"], bump, payer = user, space = SystemExchangeAccount::SIZE + 8)]
-    pub decentralized_exchange_system: Account<'info, SystemExchangeAccount>, // System account to be initialized
-    #[account(mut)]
-    pub user: Signer<'info>, // User account (mutable)
-    pub system_program: Program<'info, System>, // System program account
-}
 
 ```
 
@@ -68,61 +43,9 @@ The #[derive(Accounts)] macro defines the requirements for the accounts that are
 
 ---
 
-## Create the stock account 📈
+## Create the stock account 
 
 ```rust
-pub fn create_stock(
-    ctx: Context<CreateStock>,
-    name: String,
-    description: String,
-    total_supply: u64,
-    dividends: bool,
-    dividend_payment_period: i64,
-    date_to_go_public: i64,
-    price_to_go_public: u64
-) -> Result<()> {
-    let (_stock_pda, bump) = Pubkey::find_program_address(&[b"Stock Account", ctx.accounts.from.key().as_ref()], ctx.program_id);
-    // Check if the name length is within the allowed limit
-    require!(name.len() <= 50, ErrorCode::NameError);
-    // Check if the description length is within the allowed limit
-    require!(description.len() <= 200, ErrorCode::DescriptionError);
-    // Check if the specified date to go public is in the future
-    require!(date_to_go_public > Clock::get().unwrap().unix_timestamp, ErrorCode::Date);
-    let system: &mut Account<SystemExchangeAccount> = &mut ctx.accounts.decentralized_exchange_system;
-    let stock_account: &mut Account<StockAccount> = &mut ctx.accounts.stock_account;
-    // Increment the total stock companies count in the decentralized exchange system
-    system.total_stock_companies += 1;
-    stock_account.bump_original = bump;
-    // Set the original pubkey for the stock account
-    stock_account.pubkey_original = ctx.accounts.from.key();
-    // Set variables
-    stock_account.name = name;
-    stock_account.description = description;
-    stock_account.total_supply = total_supply;
-    stock_account.supply_in_position = total_supply;
-    stock_account.holders = 1;
-    stock_account.dividends = dividends;
-    // Set the dividend payment period for the stock account
-    stock_account.dividend_payment_period = dividend_payment_period;
-    // Set the date to go public for the stock account
-    stock_account.date_to_go_public = date_to_go_public;
-    // Set the price to go public for the stock account
-    stock_account.price_to_go_public = price_to_go_public;
-
-    Ok(())
-}
-
-#[derive(Accounts)]
-pub struct CreateStock<'info> {
-    #[account(mut, seeds = [b"System Account"], bump = decentralized_exchange_system.bump_original)]
-    pub decentralized_exchange_system: Account<'info, SystemExchangeAccount>,
-    #[account(init, seeds = [b"Stock Account", from.key().as_ref()], bump, payer = from, space = StockAccount::SIZE + 8)]
-    pub stock_account: Account<'info, StockAccount>,
-    /// CHECK: This is not dangerous
-    #[account(mut, signer)]
-    pub from: AccountInfo<'info>,
-    pub system_program: Program<'info, System>,
-}
 ```
 
 Creates a stock stock account. The function takes several parameters, including the name and description of the stock, the total number of shares available, whether and how often dividends will be paid, and the date and price of exit at bag.
@@ -131,45 +54,9 @@ Returns a result indicating whether the operation was successful or not.
 
 ---
 
-## Create a holder account 📦
+## Create a holder account
 
 ```rust
-pub fn init_holder_account(
-    ctx: Context<InitHolderAccount>
-) -> Result<()> {
-    // Checks if the stock account PDA key matches the stock account key
-    require!(ctx.accounts.stock_account_pda.key() == ctx.accounts.stock_account.key(), ErrorCode::PubkeyError);
-    // Finds the program address for the holder account
-    let (_holder_pda, bump) = Pubkey::find_program_address(&[ctx.accounts.stock_account.key().as_ref(), ctx.accounts.from.key().as_ref()], ctx.program_id);
-    let system: &mut Account<SystemExchangeAccount> = &mut ctx.accounts.decentralized_exchange_system;
-    let holder_account: &mut Account<HolderAccount> = &mut ctx.accounts.holder_account;
-    let stock_account: &mut Account<StockAccount> = &mut ctx.accounts.stock_account;
-    // Sets the bump value for the holder account
-    holder_account.bump_original = bump;
-    holder_account.participation = 0;
-    holder_account.holder_pubkey = ctx.accounts.from.key();
-    // Updates the holders count in the stock account and system
-    stock_account.holders += 1;
-    system.total_holders += 1;
-    Ok(())
-}
-
-#[derive(Accounts)]
-pub struct InitHolderAccount<'info> {
-    #[account(mut, seeds = [b"System Account"], bump = decentralized_exchange_system.bump_original)]
-    pub decentralized_exchange_system: Account<'info, SystemExchangeAccount>,
-    #[account(mut, seeds = [b"Stock Account", stock_account.pubkey_original.key().as_ref()], bump = stock_account.bump_original)]
-    pub stock_account: Account<'info, StockAccount>,
-    #[account(init, seeds = [stock_account_pda.key().as_ref(), from.key().as_ref()], bump, payer = from, space = HolderAccount::SIZE + 8)]
-    pub holder_account: Account<'info, HolderAccount>,
-    /// CHECK: This is not dangerous
-    #[account(mut)]
-    pub stock_account_pda: AccountInfo<'info>,
-    /// CHECK: This is not dangerous
-    #[account(mut, signer)]
-    pub from: AccountInfo<'info>,
-    pub system_program: Program<'info, System>
-}
 ```
 
 The init_holder_account function is a public (pub) function that is used to initialize a holder account on the decentralized exchange program. This function takes a context (ctx) that includes a data structure called InitHolderAccount that is used to get information about the accounts relevant to the function.
@@ -180,95 +67,20 @@ Then updates various accounts, including the decentralized exchange system accou
 
 ---
 
-## Create a buyer account 🛒
+## Create a buyer account
 
 ```rust
-pub fn init_buy_account(
-    ctx: Context<InitBuyAccount>
-) -> Result<()> {
-    let (_buy_pda, bump) = Pubkey::find_program_address(
-        &[b"Buy Account", ctx.accounts.stock_account_pda.key().as_ref(), ctx.accounts.from.key().as_ref()],
-        ctx.program_id
-    );
-    // Ensure that the stock account PDA key matches the provided stock account key
-    require!(
-        ctx.accounts.stock_account_pda.key() == ctx.accounts.stock_account.key(),
-        ErrorCode::PubkeyError
-    );
-    let buy_offer: &mut Account<SellOrBuyAccount> = &mut ctx.accounts.buy_offer;
-    buy_offer.bump_original = bump;
-    // Initialize sell_or_buy_amount and price as empty vectors
-    buy_offer.sell_or_buy_amount = [].to_vec();
-    buy_offer.price = [].to_vec();
-    // Set the pubkey field of the buy offer account to the provided 'from' key
-    buy_offer.pubkey = ctx.accounts.from.key();
-    buy_offer.len = 65;
-    Ok(())
-}
-
-#[derive(Accounts)]
-pub struct InitBuyAccount<'info> {
-    #[account(mut, seeds = [b"Stock Account", stock_account.pubkey_original.key().as_ref()], bump = stock_account.bump_original)]
-    pub stock_account: Account<'info, StockAccount>,
-    #[account(init, seeds = [b"Buy Account", stock_account.key().as_ref(), from.key().as_ref()], bump, payer = from, space = SellOrBuyAccount::SIZE + 8)]
-    pub buy_offer: Account<'info, SellOrBuyAccount>,
-    /// CHECK: This is not dangerous
-    #[account(mut)]
-    pub stock_account_pda: AccountInfo<'info>,
-    /// CHECK: This is not dangerous
-    #[account(mut, signer)]
-    pub from: AccountInfo<'info>,
-    pub system_program: Program<'info, System>
-}
 ```
 
-The find_program_address function is used to find the address of the program account (_buy_pda) to use for the buy offer. A security check is also performed to ensure that the share account to be purchased is the same as the share account specified in the offer to buy account.
-
-The buy_offer account is then initialized using the Accounts macro. It is specified that the account must be mutable (mut) and the seeds (seeds) necessary to initialize the account are provided. The account is initialized with a specific space (space) and it is specified that the account will be paid from the sender's account (payer).
+The find_program_address function is used to find the address of the program account (buy_pda) to use for the buy offer. A security check is also performed to ensure that the share account to be purchased is the same as the share account specified in the offer to buy account.
+The buy_offer account is then initialized using the Accounts macro. It is specified that the account must be mutable (mut) and the seeds (seeds) necessary to initialize the account are provided. The account is initialized with a specific space (space) and it is specified that the account will be paid from the sender's account (payer)
 
 ---
 
-## Create a seller account 💰
+## Create a seller account
 
 ```rust
-pub fn init_sell_account(
-    ctx: Context<InitSellAccount>
-) -> Result<()> {
-    let (_sell_pda, bump) = Pubkey::find_program_address(&[
-        b"Sell Account",
-        ctx.accounts.stock_account.key().as_ref(),
-        ctx.accounts.from.key().as_ref()
-    ], ctx.program_id);
-    // Ensure that the stock account PDA is the same as the stock account
-    require!(ctx.accounts.stock_account_pda.key() == ctx.accounts.stock_account.key(), ErrorCode::PubkeyError);
-    // Ensure that the stock account PDA is the same as the stock account
-    require!(ctx.accounts.stock_account_pda.key() == ctx.accounts.stock_account.key(), ErrorCode::PubkeyError);
-    let sell_offer: &mut Account<SellOrBuyAccount> = &mut ctx.accounts.sell_offer;
-    // Set the original bump value for the sell offer account
-    sell_offer.bump_original = bump;
-    // Initialize sell_or_buy_amount and price fields as empty vectors
-    sell_offer.sell_or_buy_amount = [].to_vec();
-    sell_offer.price = [].to_vec();
-    // Set the pubkey field of the sell offer account as the "from" account's key
-    sell_offer.pubkey = ctx.accounts.from.key();
-    sell_offer.len = 65;
-    Ok(())
-}
 
-#[derive(Accounts)]
-pub struct InitSellAccount<'info> {
-    #[account(mut, seeds = [b"Stock Account", stock_account.pubkey_original.key().as_ref()], bump = stock_account.bump_original)]
-    pub stock_account: Account<'info, StockAccount>,
-    #[account(init, seeds = [b"Sell Account", stock_account_pda.key().as_ref(), from.key().as_ref()], bump, payer = from, space = SellOrBuyAccount::SIZE + 8)]
-    pub sell_offer: Account<'info, SellOrBuyAccount>,
-    /// CHECK: This is not dangerous
-    #[account(mut)]
-    pub stock_account_pda: AccountInfo<'info>,
-    /// CHECK: This is not dangerous
-    #[account(mut, signer)]
-    pub from: AccountInfo<'info>,
-    pub system_program: Program<'info, System>
-}
 ```
 
 The init_sell_account function is responsible for initializing a sale account on the blockchain. It takes as input a Context object that contains information about the program and the current transaction. In particular, the Context object is expected to contain information about the stock account (stock_account) that is going to be sold, as well as information about the user account (from) that is making the sale.
@@ -276,71 +88,10 @@ The init_sell_account function is responsible for initializing a sale account on
 
 ---
 
-## Create an IPO 🎉
+## Create an IPO
 
 ```rust
-pub fn buy_in_initial_public_offering(
-    ctx: Context<BuyInitialPublicOffering>,
-    amount: u64
-) -> Result<()> {
-    let (holder_pda, _bump) = Pubkey::find_program_address(
-        &[ctx.accounts.stock_account.key().as_ref(), ctx.accounts.from.key().as_ref()],
-        ctx.program_id,
-    );
-    // Check if the amount is greater than zero
-    require!(amount > 0, ErrorCode::AmountError);
-    // Check if the stock account PDA is the same as the stock account
-    require!(
-        ctx.accounts.stock_account_pda.key() == ctx.accounts.stock_account.key(),
-        ErrorCode::PubkeyError
-    );
-    // Check if the amount is less than or equal to the total supply of the stock account
-    require!(
-        amount <= ctx.accounts.stock_account.total_supply,
-        ErrorCode::SupplyError
-    );
-    // Check if the holder PDA is the same as the holder account
-    require!(holder_pda.key() == ctx.accounts.holder_account.key(), ErrorCode::HolderError);
-    // Calculate the amount to send based on the price to go public and the amount of stock to buy
-    let amount_to_send: u64 = ctx.accounts.stock_account.price_to_go_public * amount;
-    // Transfer funds from the "from" account to the stock account PDA
-    anchor_lang::solana_program::program::invoke(
-        &system_instruction::transfer(
-            &ctx.accounts.from.key(),
-            &ctx.accounts.stock_account_pda.key(),
-            amount_to_send,
-        ),
-        &[ctx.accounts.from.to_account_info(), ctx.accounts.stock_account_pda.to_account_info().clone()],
-    ).expect("Error");
-    // Get mutable references to the system, holder, and stock accounts
-    let system: &mut Account<SystemExchangeAccount> = &mut ctx.accounts.decentralized_exchange_system;
-    let holder_account: &mut Account<HolderAccount> = &mut ctx.accounts.holder_account;
-    let stock_account: &mut Account<StockAccount> = &mut ctx.accounts.stock_account;
-    // Update the holder account participation
-    holder_account.participation = amount;
-    // Decrease the supply in position of the stock account
-    stock_account.supply_in_position -= amount;
-    // Increase the number of historical exchanges in the system
-    system.historical_exchanges += 1;
-    Ok(())
-}
 
-#[derive(Accounts)]
-pub struct BuyInitialPublicOffering<'info> {
-    #[account(mut, seeds = [b"System Account"], bump = decentralized_exchange_system.bump_original)]
-    pub decentralized_exchange_system: Account<'info, SystemExchangeAccount>,
-    #[account(mut, seeds = [b"Stock Account", stock_account.pubkey_original.key().as_ref()], bump = stock_account.bump_original)]
-    pub stock_account: Account<'info, StockAccount>,
-    #[account(mut, seeds = [stock_account_pda.key().as_ref(), from.key().as_ref()], bump = holder_account.bump_original)]
-    pub holder_account: Account<'info, HolderAccount>,
-    /// CHECK: This is not dangerous
-    #[account(mut)]
-    pub stock_account_pda: AccountInfo<'info>,
-    /// CHECK: This is not dangerous
-    #[account(mut, signer)]
-    pub from: AccountInfo<'info>,
-    pub system_program: Program<'info, System>
-}
 ```
 
 Takes as input a context and an amount, and returns a result. The context entry includes accounts associated with the decentralized exchange system, the share token account, the holder account, and other accounts required to perform the transaction. The feature uses a series of security checks to verify that the amount is greater than zero, that the accounts are authentic, and that the holder has enough tokens to make the purchase.
@@ -349,158 +100,20 @@ If these conditions are met, the function performs the transfer of tokens from t
 
 ---
 
-## Make a sell offer ✨
+## Make a sell offer
 
 ```rust
-pub fn sell_offer(
-    ctx: Context<SellOffer>,
-    sell_amount: u64,
-    price: u64
-) -> Result<()> {
-    // Check if the sell amount is valid
-    require!(sell_amount <= ctx.accounts.holder_account.participation, ErrorCode::AmountError);
-    let sell_offer: &mut Account<SellOrBuyAccount> = &mut ctx.accounts.sell_offer;
-    // Function to check for unique elements in an iterator
-    fn unique_elements<T>(iter: T) -> bool
-    where
-        T: IntoIterator,
-        T::Item: Ord,
-    {
-        let mut uniq = BTreeSet::new();
-        iter.into_iter().all(move |x| uniq.insert(x))
-    }
-    let mut copy = sell_offer.price.clone();
-    // Check if the price is unique
-    require!(unique_elements(vec![copy.push(price)]) == true, ErrorCode::UniquePriceError);
-    let (holder_pda, _bump) = Pubkey::find_program_address(&[ctx.accounts.stock_account.key().as_ref(), ctx.accounts.from.key().as_ref()], ctx.program_id);
-    // Check if the sell amount is greater than 0
-    require!(sell_amount > 0, ErrorCode::AmountError);
-    // Check if the stock account PDA key matches the provided stock account key
-    require!(ctx.accounts.stock_account_pda.key() == ctx.accounts.stock_account.key(), ErrorCode::PubkeyError);
-    // Check if the holder PDA key matches the provided holder account key
-    require!(holder_pda.key() == ctx.accounts.holder_account.key(), ErrorCode::HolderError);
-    let system: &mut Account<SystemExchangeAccount> = &mut ctx.accounts.decentralized_exchange_system;
-    let stock_account: &mut Account<StockAccount> = &mut ctx.accounts.stock_account;
-    let holder_account: &mut Account<HolderAccount> = &mut ctx.accounts.holder_account;
-    // Update the sell offer with the sell amount and price
-    sell_offer.sell_or_buy_amount.push(sell_amount);
-    sell_offer.price.push(price);
-    sell_offer.len += 16;
-    // Update the total offers in the system
-    system.total_offers += 1;
-    // Update the current offers in the stock account
-    stock_account.current_offers += 1;
-    // Deduct the sell amount from the holder's participation
-    holder_account.participation -= sell_amount;
-    Ok(())
-}
 
-#[derive(Accounts)]
-pub struct SellOffer<'info> {
-    #[account(mut, seeds = [b"System Account"], bump = decentralized_exchange_system.bump_original)]
-    pub decentralized_exchange_system: Account<'info, SystemExchangeAccount>,
-    #[account(mut, seeds = [b"Stock Account", stock_account.pubkey_original.key().as_ref()], bump = stock_account.bump_original)]
-    pub stock_account: Account<'info, StockAccount>,
-    #[account(mut, seeds = [stock_account_pda.key().as_ref(), from.key().as_ref()], bump = holder_account.bump_original)]
-    pub holder_account: Account<'info, HolderAccount>,
-    #[account(
-        mut,
-        seeds = [b"Sell Account", stock_account_pda.key().as_ref(), from.key().as_ref()],
-        bump = sell_offer.bump_original,
-        realloc = 8 + sell_offer.len as usize + 16,
-        realloc::payer = from,
-        realloc::zero = false,
-    )]
-    pub sell_offer: Account<'info, SellOrBuyAccount>,
-    /// CHECK: This is not dangerous
-    #[account(mut)]
-    pub stock_account_pda: AccountInfo<'info>,
-    /// CHECK: This is not dangerous
-    #[account(mut, signer)]
-    pub from: AccountInfo<'info>,
-    pub system_program: Program<'info, System>
-}
 ```
 
 Checks for the uniqueness of the price in the sell offer by calling a nested function unique_elements. If the price is not unique, the function returns an error. Next, the function generates a program-derived address (PDA) for the holder account and checks if it matches the holder account provided. It also checks if the sell amount is greater than zero and if the stock account PDA key matches the provided stock account key.
 
 ---
 
-## Make a buy offer 💎
+## Make a buy offer 
 
 ```rust
-pub fn buy_offer(
-    ctx: Context<BuyOffer>,
-    buy_amount: u64,
-    price: u64
-) -> Result<()> {
-    let (holder_pda, _bump) = Pubkey::find_program_address(
-        &[
-            ctx.accounts.stock_account.key().as_ref(),
-            ctx.accounts.from.key().as_ref()
-        ],
-        ctx.program_id
-    );
-    // Check if the holder account is correct
-    require!(holder_pda.key() == ctx.accounts.holder_account.key(), ErrorCode::HolderError);
-    // Check if buy_amount is greater than 0
-    require!(buy_amount > 0, ErrorCode::AmountError);
-    // Check if stock_account_pda key matches stock_account key
-    require!(ctx.accounts.stock_account_pda.key() == ctx.accounts.stock_account.key(), ErrorCode::PubkeyError);
-    // Check if buy_amount is less than or equal to stock_account total_supply
-    require!(buy_amount <= ctx.accounts.stock_account.total_supply, ErrorCode::AmountError);
-    // Check if buy_offer key matches buy_pda key
-    require!(ctx.accounts.buy_offer.key() == ctx.accounts.buy_pda.key(), ErrorCode::PubkeyError);
-    // Transfer SOL from 'from' account to 'buy_offer' account using system program
-    anchor_lang::solana_program::program::invoke(
-        &system_instruction::transfer(&ctx.accounts.from.key(), &ctx.accounts.buy_offer.key(), price),
-        &[ctx.accounts.from.to_account_info(), ctx.accounts.buy_pda.to_account_info().clone()],
-    ).expect("Error");
-    // Get mutable references to the accounts
-    let system: &mut Account<SystemExchangeAccount> = &mut ctx.accounts.decentralized_exchange_system;
-    let stock_account: &mut Account<StockAccount> = &mut ctx.accounts.stock_account;
-    let holder_account: &mut Account<HolderAccount> = &mut ctx.accounts.holder_account;
-    let buy_offer: &mut Account<SellOrBuyAccount> = &mut ctx.accounts.buy_offer;
-    // Add buy_amount and price to sell_or_buy_amount and price arrays
-    buy_offer.sell_or_buy_amount.push(buy_amount);
-    buy_offer.price.push(price);
-    // Increase the length by 16 (assuming u64 takes 8 bytes)
-    buy_offer.len += 16;
-    // Update total_offers in the system
-    system.total_offers += 1;
-    // Update current_offers in the stock_account
-    stock_account.current_offers += 1;
-    Ok(())
-}
 
-#[derive(Accounts)]
-pub struct BuyOffer<'info> {
-    #[account(mut, seeds = [b"System Account"], bump = decentralized_exchange_system.bump_original)]
-    pub decentralized_exchange_system: Account<'info, SystemExchangeAccount>,
-    #[account(mut, seeds = [b"Stock Account", stock_account.pubkey_original.key().as_ref()], bump = stock_account.bump_original)]
-    pub stock_account: Account<'info, StockAccount>,
-    #[account(
-        mut,
-        seeds = [b"Buy Account", stock_account_pda.key().as_ref(), from.key().as_ref()],
-        bump = buy_offer.bump_original,
-        realloc = 8 + buy_offer.len as usize + 16,
-        realloc::payer = from,
-        realloc::zero = false,
-    )]
-    pub buy_offer: Account<'info, SellOrBuyAccount>,
-    #[account(mut, seeds = [stock_account_pda.key().as_ref(), from.key().as_ref()], bump = holder_account.bump_original)]
-    pub holder_account: Account<'info, HolderAccount>,
-    /// CHECK: This is not dangerous
-    #[account(mut)]
-    pub stock_account_pda: AccountInfo<'info>,
-    /// CHECK: This is not dangerous
-    #[account(mut)]
-    pub buy_pda: AccountInfo<'info>,
-    /// CHECK: This is not dangerous
-    #[account(mut, signer)]
-    pub from: AccountInfo<'info>,
-    pub system_program: Program<'info, System>
-}
 ```
 
 The function takes as input a ctx context structure, the amount of assets to buy buy_amount and the bid price price. First, the function verifies the authenticity of the offer holder's account and the validity of the quantity and parameters of the asset account and the offer to buy. It then invokes the transfer function of the Solana system program to transfer the necessary funds from the buyer's account to the purchase offer account.
@@ -512,77 +125,7 @@ The accounts for the decentralized systems and the assets involved in the offer 
 ## Accept a sell offer 👍
 
 ```rust
-pub fn accept_a_sell(
-    ctx: Context<AcceptASell>,
-    price: u64
-) -> Result<()> {
-    // Check if the stock account PDA key matches the provided stock account key
-    require!(ctx.accounts.stock_account_pda.key() == ctx.accounts.stock_account.key(), ErrorCode::PubkeyError);
-    // Check if the sell offer key matches the provided sell PDA key
-    require!(ctx.accounts.sell_offer.key() == ctx.accounts.sell_pda.key(), ErrorCode::PubkeyError);
-    // Find the index of the specified price in the sell offer prices array
-    let index = ctx.accounts.sell_offer.price.iter().position(|&price| price == price).unwrap();
-    // Check if the specified price matches the price at the found index
-    require!(price == ctx.accounts.sell_offer.price[index], ErrorCode::PriceError);
-    // Invoke the system program to transfer funds from "from" to the sell offer account
-    anchor_lang::solana_program::program::invoke(
-        &system_instruction::transfer(&ctx.accounts.from.key(), &ctx.accounts.sell_offer.key(), ctx.accounts.sell_offer.price[index]),
-        &[ctx.accounts.from.to_account_info(), ctx.accounts.sell_pda.to_account_info().clone()],
-    ).expect("Error");
-    let system: &mut Account<SystemExchangeAccount> = &mut ctx.accounts.decentralized_exchange_system;
-    let stock_account: &mut Account<StockAccount> = &mut ctx.accounts.stock_account;
-    let seller_account: &mut Account<HolderAccount> = &mut ctx.accounts.seller_account;
-    let buyer_account: &mut Account<HolderAccount> = &mut ctx.accounts.buyer_account;
-    let sell_offer: &mut Account<SellOrBuyAccount> = &mut ctx.accounts.sell_offer;
-    // Increment the historical exchanges counter
-    system.historical_exchanges += 1;
-    // Decrement the total offers counter
-    system.total_offers -= 1;
-    // Decrement the current offers counter in the stock account
-    stock_account.current_offers -= 1;
-    // Subtract the sell or buy amount from the seller's participation
-    seller_account.participation -= sell_offer.sell_or_buy_amount[index];
-    // Add the sell or buy amount to the buyer's participation
-    buyer_account.participation += sell_offer.sell_or_buy_amount[index];
-    // Remove the sell or buy amount at the specified index
-    sell_offer.sell_or_buy_amount.remove(index);
-    // Remove the price at the specified index
-    sell_offer.price.remove(index);
-    // Decrement the length of the sell offer by 16
-    sell_offer.len -= 16;
-    Ok(())
-}
 
-#[derive(Accounts)]
-pub struct AcceptASell<'info> {
-    #[account(mut, seeds = [b"System Account"], bump = decentralized_exchange_system.bump_original)]
-    pub decentralized_exchange_system: Account<'info, SystemExchangeAccount>,
-    #[account(mut, seeds = [b"Stock Account", stock_account.pubkey_original.key().as_ref()], bump = stock_account.bump_original)]
-    pub stock_account: Account<'info, StockAccount>,
-    #[account(mut, seeds = [stock_account_pda.key().as_ref(), from.key().as_ref()], bump = seller_account.bump_original)]
-    pub seller_account: Account<'info, HolderAccount>,
-    #[account(mut, seeds = [stock_account_pda.key().as_ref(), from.key().as_ref()], bump = buyer_account.bump_original)]
-    pub buyer_account: Account<'info, HolderAccount>,
-    #[account(
-        mut,
-        seeds = [b"Sell Account", stock_account_pda.key().as_ref(), from.key().as_ref()],
-        bump = sell_offer.bump_original,
-        realloc = 8 + sell_offer.len as usize - 16,
-        realloc::payer = from,
-        realloc::zero = false,
-    )]
-    pub sell_offer: Account<'info, SellOrBuyAccount>,
-    /// CHECK: This is not dangerous
-    #[account(mut)]
-    pub stock_account_pda: AccountInfo<'info>,
-    /// CHECK: This is not dangerous
-    #[account(mut)]
-    pub sell_pda: AccountInfo<'info>,
-    /// CHECK: This is not dangerous
-    #[account(mut, signer)]
-    pub from: AccountInfo<'info>,
-    pub system_program: Program<'info, System>,
-}
 ```
 
 Its purpose is to accept a sell offer from a holder account and execute the transaction by transferring the tokens to the buyer and updating the relevant accounts.The function takes in the following parameters:
@@ -594,150 +137,20 @@ If the sell offer is valid, the function invokes the system_instruction::transfe
 
 ---
 
-## Accept a buy offer 🛒
+## Accept a buy offer 
 
 ```rust
-pub fn accept_a_buy(
-    ctx: Context<AcceptABuy>,
-    price: u64
-) -> Result<()> {
-    // Check if the stock account PDA key matches the stock account key
-    require!(ctx.accounts.stock_account_pda.key() == ctx.accounts.stock_account.key(), ErrorCode::PubkeyError);
-    // Check if the buy offer key matches the buyer PDA key
-    require!(ctx.accounts.buy_offer.key() == ctx.accounts.buyer_pda.key(), ErrorCode::PubkeyError);
-    // Find the index of the price in the buy offer's price vector
-    let index = ctx.accounts.buy_offer.price.iter().position(|&price| price == price).unwrap();
-    // Check if the given price matches the price at the found index
-    require!(price == ctx.accounts.buy_offer.price[index], ErrorCode::PriceError);
-    // Decrease the lamports of the buy offer account by the price
-    **ctx.accounts.buy_offer.to_account_info().try_borrow_mut_lamports()? -= price;
-    // Increase the lamports of the 'from' account by the price
-    **ctx.accounts.from.to_account_info().try_borrow_mut_lamports()? += price;
-    let system: &mut Account<SystemExchangeAccount> = &mut ctx.accounts.decentralized_exchange_system;
-    let stock_account: &mut Account<StockAccount> = &mut ctx.accounts.stock_account;
-    let seller_account: &mut Account<HolderAccount> = &mut ctx.accounts.seller_account;
-    let buyer_account: &mut Account<HolderAccount> = &mut ctx.accounts.buyer_account;
-    let buy_offer: &mut Account<SellOrBuyAccount> = &mut ctx.accounts.buy_offer;
-    // Increment the historical_exchanges count in the system account
-    system.historical_exchanges += 1;
-    // Decrement the total_offers count in the system account
-    system.total_offers -= 1;
-    // Decrement the current_offers count in the stock account
-    stock_account.current_offers -= 1;
-    // Decrease the participation amount in the seller account by the sell_or_buy_amount at the found index
-    seller_account.participation -= buy_offer.sell_or_buy_amount[index];
-    // Increase the participation amount in the buyer account by the sell_or_buy_amount at the found index
-    buyer_account.participation += buy_offer.sell_or_buy_amount[index];
-    // Remove the sell_or_buy_amount and price at the found index from the buy offer
-    buy_offer.sell_or_buy_amount.remove(index);
-    buy_offer.price.remove(index);
-    // Decrease the len field of the buy offer by 16
-    buy_offer.len -= 16;
-    Ok(())
-}
 
-#[derive(Accounts)]
-pub struct AcceptABuy<'info> {
-    #[account(mut, seeds = [b"System Account"], bump = decentralized_exchange_system.bump_original)]
-    pub decentralized_exchange_system: Account<'info, SystemExchangeAccount>,
-    #[account(mut, seeds = [b"Stock Account", stock_account.pubkey_original.key().as_ref()], bump = stock_account.bump_original)]
-    pub stock_account: Account<'info, StockAccount>,
-    #[account(mut, seeds = [stock_account_pda.key().as_ref(), from.key().as_ref()], bump = seller_account.bump_original)]
-    pub seller_account: Account<'info, HolderAccount>,
-    #[account(mut, seeds = [stock_account_pda.key().as_ref(), from.key().as_ref()], bump = buyer_account.bump_original)]
-    pub buyer_account: Account<'info, HolderAccount>,
-    #[account(
-        mut,
-        seeds = [b"Buy Account", stock_account_pda.key().as_ref(), from.key().as_ref()],
-        bump = buy_offer.bump_original,
-        realloc = 8 + buy_offer.len as usize - 16,
-        realloc::payer = from,
-        realloc::zero = false,
-    )]
-    pub buy_offer: Account<'info, SellOrBuyAccount>,
-    /// CHECK: This is not dangerous
-    #[account(mut)]
-    pub stock_account_pda: AccountInfo<'info>,
-    /// CHECK: This is not dangerous
-    #[account(mut)]
-    pub buyer_pda: AccountInfo<'info>,
-    /// CHECK: This is not dangerous
-    #[account(mut, signer)]
-    pub from: AccountInfo<'info>,
-    pub system_program: Program<'info, System>,
-}
 ```
 
 First performs some checks to make sure that the transaction is valid and secure. Then, update the details of the accounts involved in the transaction. In particular, it reduces the account balance of the purchase offer in "price" units and increases the account balance of the seller in "price" units. Then, update the counters and tracking data for the decentralized exchange.
 
 ---
 
-## Cancel a sell offer ❌
+## Cancel a sell offer 
 
 ```rust
-pub fn cancel_sell(
-    ctx: Context<CancelSellOffer>,
-    price_to_cancel: u64
-) -> Result<()> {
-    let (holder_pda, _bump) = Pubkey::find_program_address(
-        &[ctx.accounts.stock_account.key().as_ref(), ctx.accounts.from.key().as_ref()],
-        ctx.program_id
-    );
-    // Check if the price to cancel is greater than zero
-    require!(price_to_cancel > 0, ErrorCode::AmountError);
-    // Check if the stock account PDA key matches the stock account key
-    require!(ctx.accounts.stock_account_pda.key() == ctx.accounts.stock_account.key(), ErrorCode::PubkeyError);
-    // Check if the holder PDA key matches the holder account key
-    require!(holder_pda.key() == ctx.accounts.holder_account.key(), ErrorCode::HolderError);
-    let system: &mut Account<SystemExchangeAccount> = &mut ctx.accounts.decentralized_exchange_system;
-    let stock_account: &mut Account<StockAccount> = &mut ctx.accounts.stock_account;
-    let holder_account: &mut Account<HolderAccount> = &mut ctx.accounts.holder_account;
-    let sell_offer: &mut Account<SellOrBuyAccount> = &mut ctx.accounts.sell_offer;
-    // Find the index of the sell offer with the specified price
-    let index = sell_offer.price.iter().position(|&price| price == price_to_cancel).unwrap();
 
-    // Check if the price to cancel matches the price at the found index
-    require!(price_to_cancel == sell_offer.price[index], ErrorCode::PriceError);
-    // Remove the sell or buy amount and price at the found index
-    sell_offer.sell_or_buy_amount.remove(index);
-    sell_offer.price.remove(index);
-    // Decrease the length of the sell offer by 16 (assuming each element is u64)
-    sell_offer.len -= 16;
-    // Decrease the total number of offers in the system
-    system.total_offers -= 1;
-    // Decrease the current offers count in the stock account
-    stock_account.current_offers -= 1;
-    // Increase the participation amount in the holder account
-    holder_account.participation += price_to_cancel;
-    Ok(())
-}
-
-#[derive(Accounts)]
-pub struct CancelSellOffer<'info> {
-    #[account(mut, seeds = [b"System Account"], bump = decentralized_exchange_system.bump_original)]
-    pub decentralized_exchange_system: Account<'info, SystemExchangeAccount>,
-    #[account(mut, seeds = [b"Stock Account", stock_account.pubkey_original.key().as_ref()], bump = stock_account.bump_original)]
-    pub stock_account: Account<'info, StockAccount>,
-    #[account(mut, seeds = [stock_account_pda.key().as_ref(), from.key().as_ref()], bump = holder_account.bump_original)]
-    pub holder_account: Account<'info, HolderAccount>,
-    #[account(
-        mut,
-        seeds = [b"Sell Account", stock_account.key().as_ref(), from.key().as_ref()],
-        bump = sell_offer.bump_original,
-        realloc = 8 + sell_offer.len as usize - 16,
-        realloc::payer = from,
-        realloc::zero = false,
-    )]
-    pub sell_offer: Account<'info, SellOrBuyAccount>,
-    /// CHECK: This is not dangerous
-    #[account(mut)]
-    pub stock_account_pda: AccountInfo<'info>,
-    /// CHECK: This is not dangerous
-    #[account(mut, signer)]
-    pub from: AccountInfo<'info>,
-    // System program account
-    pub system_program: Program<'info, System>,
-}
 ```
 
 The function is responsible for canceling an existing sale offer in the exchange system, returning the sold tokens to the owner of the sale account. The function takes as input a CancelSellOffer structure, which contains the accounts needed to cancel the sale offer. It is required that the sale offer is valid and that the cancellation price is greater than zero.
@@ -749,62 +162,7 @@ Then looks up the sales quote in the sales account and removes the sales quote c
 ## Cancel a buy offer ❌
 
 ```rust
-pub fn cancel_buy(
-    ctx: Context<CancelBuyOffer>,
-    price_to_cancel: u64
-) -> Result<()> {
-    // Check if the stock account PDA key matches the provided stock account key
-    require!(ctx.accounts.stock_account_pda.key() == ctx.accounts.stock_account.key(), ErrorCode::PubkeyError);
-    // Check if the buy offer key matches the provided buy PDA key
-    require!(ctx.accounts.buy_offer.key() == ctx.accounts.buy_pda.key(), ErrorCode::PubkeyError);
-    let system: &mut Account<SystemExchangeAccount> = &mut ctx.accounts.decentralized_exchange_system;
-    let stock_account: &mut Account<StockAccount> = &mut ctx.accounts.stock_account;
-    let buy_offer: &mut Account<SellOrBuyAccount> = &mut ctx.accounts.buy_offer;
-    // Find the index of the price to cancel in the buy offer's price array
-    let index = buy_offer.price.iter().position(|&price| price == price_to_cancel).unwrap();
-    // Check if the price to cancel matches the price at the found index
-    require!(price_to_cancel == buy_offer.price[index], ErrorCode::PriceError);
-    // Remove the sell_or_buy_amount and price at the found index
-    buy_offer.sell_or_buy_amount.remove(index);
-    buy_offer.price.remove(index);
-    // Decrease the length of the buy_offer by 16 (assuming each element is 16 bytes)
-    buy_offer.len -= 16;
-    // Decrease the total_offers in the system by 1
-    system.total_offers -= 1;
-    // Decrease the current_offers in the stock account by 1
-    stock_account.current_offers -= 1;
-    // Subtract the price_to_cancel from the buy PDA account and add it to the 'from' account
-    **ctx.accounts.buy_pda.to_account_info().try_borrow_mut_lamports()? -= price_to_cancel;
-    **ctx.accounts.from.to_account_info().try_borrow_mut_lamports()? += price_to_cancel;
-    Ok(())
-}
 
-#[derive(Accounts)]
-pub struct CancelBuyOffer<'info> {
-    #[account(mut, seeds = [b"System Account"], bump = decentralized_exchange_system.bump_original)]
-    pub decentralized_exchange_system: Account<'info, SystemExchangeAccount>,
-    #[account(mut, seeds = [b"Stock Account", stock_account.pubkey_original.key().as_ref()], bump = stock_account.bump_original)]
-    pub stock_account: Account<'info, StockAccount>,
-    #[account(
-        mut,
-        seeds = [b"Buy Account", stock_account.key().as_ref(), from.key().as_ref()],
-        bump = buy_offer.bump_original,
-        realloc = 8 + buy_offer.len as usize - 16,
-        realloc::payer = from,
-        realloc::zero = false,
-    )]
-    pub buy_offer: Account<'info, SellOrBuyAccount>,
-    /// CHECK: This is not dangerous
-    #[account(mut)]
-    pub stock_account_pda: AccountInfo<'info>,
-    /// CHECK: This is not dangerous
-    #[account(mut)]
-    pub buy_pda: AccountInfo<'info>,
-    /// CHECK: This is not dangerous
-    #[account(mut, signer)]
-    pub from: AccountInfo<'info>,
-    pub system_program: Program<'info, System>
-}
 ```
 
 - ctx: A Context object that contains information about the current transaction.

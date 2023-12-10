@@ -1,10 +1,8 @@
-use anchor_lang::{
-    prelude::*,
-    solana_program::account_info::AccountInfo,
-    solana_program::pubkey::Pubkey,
-};
-use crate::state::accounts::*;
 use crate::errors::ErrorCode;
+use crate::state::accounts::*;
+use anchor_lang::{
+    prelude::*, solana_program::account_info::AccountInfo, solana_program::pubkey::Pubkey,
+};
 
 pub fn create_stock(
     ctx: Context<CreateStock>,
@@ -14,16 +12,23 @@ pub fn create_stock(
     dividends: bool,
     dividend_payment_period: i64,
     date_to_go_public: i64,
-    price_to_go_public: u64
+    price_to_go_public: u64,
 ) -> Result<()> {
-    let (_stock_pda, bump) = Pubkey::find_program_address(&[b"Stock Account", ctx.accounts.from.key().as_ref()], ctx.program_id);
+    let (_stock_pda, bump) = Pubkey::find_program_address(
+        &[b"Stock Account", ctx.accounts.from.key().as_ref()],
+        ctx.program_id,
+    );
     // Check if the name length is within the allowed limit
     require!(name.len() <= 50, ErrorCode::NameError);
     // Check if the description length is within the allowed limit
     require!(description.len() <= 200, ErrorCode::DescriptionError);
     // Check if the specified date to go public is in the future
-    require!(date_to_go_public > Clock::get().unwrap().unix_timestamp, ErrorCode::Date);
-    let system: &mut Account<SystemExchangeAccount> = &mut ctx.accounts.decentralized_exchange_system;
+    require!(
+        date_to_go_public > Clock::get().unwrap().unix_timestamp,
+        ErrorCode::Date
+    );
+    let system: &mut Account<SystemExchangeAccount> =
+        &mut ctx.accounts.decentralized_exchange_system;
     let stock_account: &mut Account<StockAccount> = &mut ctx.accounts.stock_account;
     // Increment the total stock companies count in the decentralized exchange system
     system.total_stock_companies += 1;

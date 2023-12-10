@@ -1,41 +1,56 @@
-use anchor_lang::{
-    prelude::*,
-    solana_program::account_info::AccountInfo,
-    solana_program::system_instruction,
-    solana_program::pubkey::Pubkey,
-}; 
-use crate::state::accounts::*;
 use crate::errors::ErrorCode;
+use crate::state::accounts::*;
+use anchor_lang::{
+    prelude::*, solana_program::account_info::AccountInfo, solana_program::pubkey::Pubkey,
+    solana_program::system_instruction,
+};
 
-pub fn buy_offer(
-    ctx: Context<BuyOffer>,
-    buy_amount: u64,
-    price: u64
-) -> Result<()> {
+pub fn buy_offer(ctx: Context<BuyOffer>, buy_amount: u64, price: u64) -> Result<()> {
     let (holder_pda, _bump) = Pubkey::find_program_address(
         &[
             ctx.accounts.stock_account.key().as_ref(),
-            ctx.accounts.from.key().as_ref()
+            ctx.accounts.from.key().as_ref(),
         ],
-        ctx.program_id
+        ctx.program_id,
     );
     // Check if the holder account is correct
-    require!(holder_pda.key() == ctx.accounts.holder_account.key(), ErrorCode::HolderError);
+    require!(
+        holder_pda.key() == ctx.accounts.holder_account.key(),
+        ErrorCode::HolderError
+    );
     // Check if buy_amount is greater than 0
     require!(buy_amount > 0, ErrorCode::AmountError);
     // Check if stock_account_pda key matches stock_account key
-    require!(ctx.accounts.stock_account_pda.key() == ctx.accounts.stock_account.key(), ErrorCode::PubkeyError);
+    require!(
+        ctx.accounts.stock_account_pda.key() == ctx.accounts.stock_account.key(),
+        ErrorCode::PubkeyError
+    );
     // Check if buy_amount is less than or equal to stock_account total_supply
-    require!(buy_amount <= ctx.accounts.stock_account.total_supply, ErrorCode::AmountError);
+    require!(
+        buy_amount <= ctx.accounts.stock_account.total_supply,
+        ErrorCode::AmountError
+    );
     // Check if buy_offer key matches buy_pda key
-    require!(ctx.accounts.buy_offer.key() == ctx.accounts.buy_pda.key(), ErrorCode::PubkeyError);
+    require!(
+        ctx.accounts.buy_offer.key() == ctx.accounts.buy_pda.key(),
+        ErrorCode::PubkeyError
+    );
     // Transfer SOL from 'from' account to 'buy_offer' account using system program
     anchor_lang::solana_program::program::invoke(
-        &system_instruction::transfer(&ctx.accounts.from.key(), &ctx.accounts.buy_offer.key(), price),
-        &[ctx.accounts.from.to_account_info(), ctx.accounts.buy_pda.to_account_info().clone()],
-    ).expect("Error");
+        &system_instruction::transfer(
+            &ctx.accounts.from.key(),
+            &ctx.accounts.buy_offer.key(),
+            price,
+        ),
+        &[
+            ctx.accounts.from.to_account_info(),
+            ctx.accounts.buy_pda.to_account_info().clone(),
+        ],
+    )
+    .expect("Error");
     // Get mutable references to the accounts
-    let system: &mut Account<SystemExchangeAccount> = &mut ctx.accounts.decentralized_exchange_system;
+    let system: &mut Account<SystemExchangeAccount> =
+        &mut ctx.accounts.decentralized_exchange_system;
     let stock_account: &mut Account<StockAccount> = &mut ctx.accounts.stock_account;
     let holder_account: &mut Account<HolderAccount> = &mut ctx.accounts.holder_account;
     let buy_offer: &mut Account<SellOrBuyAccount> = &mut ctx.accounts.buy_offer;
@@ -77,5 +92,5 @@ pub struct BuyOffer<'info> {
     /// CHECK: This is not dangerous
     #[account(mut, signer)]
     pub from: AccountInfo<'info>,
-    pub system_program: Program<'info, System>
+    pub system_program: Program<'info, System>,
 }
