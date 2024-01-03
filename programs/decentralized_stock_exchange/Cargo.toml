@@ -1,7 +1,7 @@
 [package]
 name = "decentralized_exchange"
 authors = ["Mateo Lafalce <mateolafalce@protonmail.com>"]
-version = "1.0.0"
+version = "1.0.1"
 description = "A decentralized stock market"
 edition = "2021"
 

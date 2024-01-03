@@ -1,24 +1,10 @@
 <div align="center">
 
-  ![stock-exchange](stock-exchange.gif)
+![stock-exchange](stock-exchange.gif)
 
-  ## Decentralized stock exchange
-
----
-
-![GitHub Repo stars](https://img.shields.io/github/stars/mateolafalce/DecentralizedStockExchange?color=193737&style=for-the-badge)
-![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/mateolafalce/DecentralizedStockExchange?color=193737&style=for-the-badge)
-![GitHub forks](https://img.shields.io/github/forks/mateolafalce/DecentralizedStockExchange?color=193737&style=for-the-badge)
-
-![GitHub](https://img.shields.io/github/license/mateolafalce/DecentralizedStockExchange?color=193737&style=for-the-badge)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/mateolafalce/DecentralizedStockExchange?color=193737&style=for-the-badge)
-
-![GitHub closed pull requests](https://img.shields.io/github/issues-pr-closed-raw/mateolafalce/DecentralizedStockExchange?color=193737&style=for-the-badge)
-![GitHub closed issues](https://img.shields.io/github/issues-closed/mateolafalce/DecentralizedStockExchange?color=193737&style=for-the-badge)
+# Decentralized stock exchange
 
 </div>
-
----
 
 This exchange is based on the Solana blockchain technology, which makes it completely decentralized and highly secure. Thanks to privacy and decentralization, this stock market allows users to carry out financial transactions completely privately and freely, without the need for intermediaries.
 
