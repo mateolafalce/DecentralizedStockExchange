@@ -1,6 +1,6 @@
 use crate::{
     state::accounts::*,
-    utils::utils::{get_index, pda_transfer, PRODUCT},
+    utils::util::{get_index, pda_transfer, PRODUCT},
 };
 use anchor_lang::{
     prelude::*, solana_program::account_info::AccountInfo, solana_program::pubkey::Pubkey,

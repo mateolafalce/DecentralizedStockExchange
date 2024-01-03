@@ -1,4 +1,4 @@
-use crate::{state::accounts::*, utils::utils::*, validations::*};
+use crate::{state::accounts::*, utils::util::*};
 use anchor_lang::prelude::*;
 
 pub fn sell_offer(ctx: Context<SellOffer>, sell_amount: u64, price: u64) -> Result<()> {
@@ -17,8 +17,8 @@ pub fn sell_offer(ctx: Context<SellOffer>, sell_amount: u64, price: u64) -> Resu
         ctx.accounts.stock_account.key(),
     );
     require_keys_eq!(holder_pda.key(), ctx.accounts.holder_account.key());
-    less_or_equal_than(sell_amount, ctx.accounts.holder_account.participation).unwrap();
-    check_unique_of_price(ctx.accounts.sell_offer.price.clone()).unwrap();
+    require_gte!(ctx.accounts.holder_account.participation, sell_amount);
+    require_eq!(unique_elements(vec![&ctx.accounts.sell_offer.price]), true);
     require_gt!(sell_amount, 0);
 
     //get &mut accounts

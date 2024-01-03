@@ -1,4 +1,4 @@
-use crate::{state::accounts::*, utils::utils::PRODUCT, validations::*};
+use crate::{state::accounts::*, utils::util::PRODUCT};
 use anchor_lang::{prelude::*, solana_program::*};
 
 pub fn buy_offer(ctx: Context<BuyOffer>, buy_amount: u64, price: u64) -> Result<()> {
@@ -17,7 +17,7 @@ pub fn buy_offer(ctx: Context<BuyOffer>, buy_amount: u64, price: u64) -> Result<
         ctx.accounts.stock_account_pda.key(),
         ctx.accounts.stock_account.key(),
     );
-    less_or_equal_than(buy_amount, ctx.accounts.stock_account.total_supply).unwrap();
+    require_gte!(ctx.accounts.stock_account.total_supply, buy_amount);
     require_gt!(buy_amount, 0);
 
     // lamports transfer

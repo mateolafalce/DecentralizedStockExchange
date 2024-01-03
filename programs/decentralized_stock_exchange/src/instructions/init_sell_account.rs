@@ -1,4 +1,4 @@
-use crate::{state::accounts::*, utils::utils::*};
+use crate::{state::accounts::*, utils::util::*};
 use anchor_lang::prelude::*;
 
 pub fn init_sell_account(ctx: Context<InitSellAccount>) -> Result<()> {

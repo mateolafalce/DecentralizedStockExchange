@@ -1,25 +1,24 @@
-use crate::{state::accounts::*, utils::utils::*, validations::*};
+use crate::{state::accounts::*, utils::util::*};
 use anchor_lang::prelude::*;
 
 pub fn create_stock(
     ctx: Context<CreateStock>,
     name: String,
-    description: String,
     total_supply: u64,
     dividends: bool,
     dividend_payment_period: i64,
     date_to_go_public: i64,
     price_to_go_public: u64,
 ) -> Result<()> {
+    let current_time: i64 = Clock::get().unwrap().unix_timestamp;
     let (_stock_pda, bump) = Pubkey::find_program_address(
         &[b"Stock Account", ctx.accounts.from.key().as_ref()],
         ctx.program_id,
     );
 
     //validations
-    less_or_equal_than(name.len() as u64, NAME).unwrap();
-    less_or_equal_than(description.len() as u64, DESCRIPTION).unwrap();
-    check_current_time(date_to_go_public).unwrap();
+    require_gte!(NAME, name.len() as u64);
+    require_gte!(date_to_go_public, current_time);
 
     //get &mut accounts
     let system = &mut ctx.accounts.decentralized_exchange_system;
@@ -30,7 +29,6 @@ pub fn create_stock(
     stock_account.set_bump(bump);
     stock_account.set_pubkey(ctx.accounts.from.key());
     stock_account.set_name(name);
-    stock_account.set_description(description);
     stock_account.set_total_supply(total_supply);
     stock_account.set_supply_in_position(total_supply);
     stock_account.init_holders();

@@ -8,7 +8,7 @@ pub const BUY_ACCOUNT: u64 = 65; // look accounts.rs comments
 pub const SELL_ACCOUNT: u64 = 65; // look accounts.rs comments
 
 pub fn get_index(price: Vec<u64>) -> usize {
-    price.iter().position(|&price| price == price).unwrap()
+    price.iter().position(|_pr| true).unwrap()
 }
 
 pub fn pda_transfer(from: AccountInfo, to: AccountInfo, amount: u64) -> Result<(), ProgramError> {

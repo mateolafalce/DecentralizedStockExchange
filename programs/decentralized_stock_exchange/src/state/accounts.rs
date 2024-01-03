@@ -14,7 +14,6 @@ pub struct StockAccount {
     pub bump_original: u8,            // 1
     pub pubkey_original: Pubkey,      // 32
     pub name: String,                 // 4 + 50
-    pub description: String,          // 4 + 200
     pub total_supply: u64,            // 8
     pub supply_in_position: u64,      // 8
     pub holders: u64,                 // 8
@@ -23,7 +22,7 @@ pub struct StockAccount {
     pub date_to_go_public: i64,       // 8
     pub price_to_go_public: u64,      // 8
     pub current_offers: u32,          // 4
-} // total = 344
+} // total = 140
 
 #[account]
 pub struct HolderAccount {
@@ -102,7 +101,7 @@ impl HolderAccount {
 }
 
 impl StockAccount {
-    pub const SIZE: usize = 1 + 32 + 4 + 50 + 4 + 200 + 8 + 8 + 1 + 8 + 8 + 8 + 4 + 8;
+    pub const SIZE: usize = 1 + 32 + 4 + 50 + 8 + 8 + 1 + 8 + 8 + 8 + 4 + 8;
 
     pub fn sub_current_offers(&mut self) {
         self.current_offers -= 1;
@@ -126,10 +125,6 @@ impl StockAccount {
 
     pub fn set_name(&mut self, name: String) {
         self.name = name;
-    }
-
-    pub fn set_description(&mut self, description: String) {
-        self.description = description;
     }
 
     pub fn set_total_supply(&mut self, supply: u64) {

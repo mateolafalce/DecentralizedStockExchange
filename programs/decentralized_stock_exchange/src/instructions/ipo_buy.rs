@@ -1,4 +1,4 @@
-use crate::{state::accounts::*, validations::*};
+use crate::state::accounts::*;
 use anchor_lang::{prelude::*, solana_program::*};
 
 pub fn buy_in_initial_public_offering(
@@ -20,7 +20,7 @@ pub fn buy_in_initial_public_offering(
     );
     require_keys_eq!(holder_pda.key(), ctx.accounts.holder_account.key());
     require_gt!(amount, 0);
-    less_or_equal_than(amount, ctx.accounts.stock_account.total_supply).unwrap();
+    require_gte!(ctx.accounts.stock_account.total_supply, amount);
 
     //lamport transfer
     let amount_to_send: u64 = ctx.accounts.stock_account.price_to_go_public * amount;
